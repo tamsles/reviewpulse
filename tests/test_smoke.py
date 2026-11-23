@@ -25,3 +25,23 @@ def test_cli_without_command_fails():
     with pytest.raises(SystemExit) as exc:
         cli.main([])
     assert exc.value.code != 0
+
+
+def test_git_info_describes_the_code_checkout_not_rp_home(tmp_path, monkeypatch):
+    import subprocess
+
+    from reviewpulse import tracking
+
+    monkeypatch.setenv("RP_HOME", str(tmp_path))  # not a git repo
+    try:
+        head = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=tracking.CODE_ROOT,
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        pytest.skip("not a git checkout")
+    assert tracking.git_info()["git_commit"] == head
+    assert tracking.git_info(tmp_path) == {"git_commit": "unknown", "git_dirty": "true"}

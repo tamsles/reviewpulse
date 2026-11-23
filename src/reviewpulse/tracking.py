@@ -12,6 +12,9 @@ import mlflow  # noqa: E402
 
 from reviewpulse import paths  # noqa: E402
 
+# src/reviewpulse/tracking.py -> repository root of an editable checkout
+CODE_ROOT = Path(__file__).resolve().parents[2]
+
 
 def configure(experiment: str) -> str:
     """Point MLflow at RP_HOME (unless MLFLOW_TRACKING_URI is set) and select experiment."""
@@ -26,8 +29,13 @@ def configure(experiment: str) -> str:
 
 
 def git_info(cwd: Path | None = None) -> dict[str, str]:
-    """Commit hash and dirty flag of the code that produced a run."""
-    cwd = cwd or paths.rp_home()
+    """Commit hash and dirty flag of the code that produced a run.
+
+    Looks at the repository that contains this source code, not at RP_HOME: the data
+    home may live elsewhere (e.g. a temp dir in the demo). Outside a git checkout
+    (e.g. a pip-installed wheel) the build is reported as unknown and dirty.
+    """
+    cwd = cwd or CODE_ROOT
     try:
         commit = subprocess.run(
             ["git", "rev-parse", "HEAD"], cwd=cwd, capture_output=True, text=True, check=True

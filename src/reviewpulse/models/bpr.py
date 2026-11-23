@@ -88,6 +88,8 @@ class BPRModel:
         self.Q = np.ascontiguousarray(Q, dtype=np.float32)
         self._cache_key: tuple[str, ...] | None = None
         self._cache_idx: np.ndarray | None = None
+        self._identity_checked_for: np.ndarray | None = None
+        self._identity = False
 
     # --- Recommender interface ------------------------------------------------
 
@@ -107,7 +109,16 @@ class BPRModel:
 
     def score_items(self, user_key: str, item_ids: Sequence[str]) -> np.ndarray:
         u = self.user_index[user_key]
-        return self.Q[self._item_rows(item_ids)] @ self.P[u]
+        idx = self._item_rows(item_ids)
+        if len(idx) == len(self.Q) and self._is_identity(idx):
+            return self.Q @ self.P[u]  # common case: avoid copying Q for every user
+        return self.Q[idx] @ self.P[u]
+
+    def _is_identity(self, idx: np.ndarray) -> bool:
+        if idx is not self._identity_checked_for:
+            self._identity_checked_for = idx
+            self._identity = bool((idx == np.arange(len(idx))).all())
+        return self._identity
 
     # --- training ---------------------------------------------------------------
 

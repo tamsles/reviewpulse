@@ -223,3 +223,16 @@ def test_rec_t06_non_finite_loss_raises(golden):
 def test_bpr_config_rejects_invalid_values(kwargs):
     with pytest.raises(BPRError):
         BPRConfig(**kwargs)
+
+
+def test_score_items_fast_path_matches_reordered_items(golden):
+    model, _ = _fit(golden)
+    items = tuple(sorted(model.item_index))
+    shuffled = tuple(reversed(items))
+    u = "key-synthetic-u1"
+    fast = model.score_items(u, items)
+    slow = model.score_items(u, shuffled)
+    np.testing.assert_allclose(fast, slow[::-1], rtol=1e-6)
+    np.testing.assert_allclose(fast, model.Q @ model.P[model.user_index[u]], rtol=1e-6)
+    with pytest.raises(BPRError, match="not in the BPR item mapping"):
+        model.score_items(u, ("unknown-item",))

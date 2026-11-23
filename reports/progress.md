@@ -86,7 +86,7 @@ Day 2 的 T04：`rank()` + 评估器 + Golden Case 测试（TE-T07/T08、EVAL-T0
 - 噪声参考：Pop NDCG 的标准误是 0.00153；随机排序的期望 NDCG（|rel|=1）约为 0.000051。
 
 ### 未完成 / 未验证
-- `configs/quality.yaml` 的三个阈值：提议已经给出，**等用户确认**。
+- `configs/quality.yaml` 已按用户确认的值写入：min_abs_ndcg=0.004、min_improvement=0.0025、max_regression=0.0（理由写在文件注释里）。
 - lr=1e-3 时 patience 5 不够，模型还没进入有效训练就被停了。没有为此改规格（网格和 patience 都是 MODEL-03 定的），作为局限写进 experiment.md。
 
 ### 明天第一件事

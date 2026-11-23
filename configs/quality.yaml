@@ -1,0 +1,21 @@
+# Gate thresholds (spec 04, GATE-01). Set on 2026-11-23 from real validation numbers
+# (reports/progress.md, Day 2); approved by the user. Validation only - never test.
+quality:
+  recommendation:
+    primary_metric: rec/val/ndcg_at_10
+    direction: maximize
+    # ~80x random ranking (0.00005) and ~Pop - 2.9 SE (Pop 0.00842, SE 0.00153).
+    # Catches broken / untrained bundles, e.g. the lr=1e-3 BPR runs at 0.00296.
+    min_abs_ndcg: 0.004
+    # ~2x the paired SE of (BPR - Pop) = 0.00129: a non-Pop model must beat Pop
+    # by more than sampling noise.
+    min_improvement: 0.0025
+    # Evaluation is deterministic on a fixed split, so a candidate may not be worse
+    # than the champion at all. Rollback does not re-run the gate (PROM-03).
+    max_regression: 0.0
+    pop_exempt_from_beating_pop: true
+    reject_on_split_mismatch: true   # v1.2: no champion re-evaluation (ADR-0009 D5)
+    reject_dirty_build: true
+  promotion:
+    dry_run_by_default: true
+    cas_field: version_counter

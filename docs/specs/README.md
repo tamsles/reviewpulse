@@ -1,7 +1,7 @@
 # ReviewPulse — 5 天精简版规格（v1.2）
 
 > 编制日期：2026-11-21。基于 v1.1（`../reviewpulse-specs-v1.1/`）裁剪。
-> **状态：设计，尚未实现。** 本包是给 Coding Agent 按天实现、给人审核的规格，不是可运行代码。
+> **状态：Day 1–5 已实现（2026-11-23）**，进度和真实数字见 [`../../reports/progress.md`](../../reports/progress.md)，剩下的待办见 [`specs/backlog.md`](specs/backlog.md)。本包是给 Coding Agent 按天实现、给人审核的规格，本身不是可运行代码。
 > 范围决策见 [`specs/decisions/ADR-0009-v1.2-five-day-scope.md`](specs/decisions/ADR-0009-v1.2-five-day-scope.md)（**ACCEPTED**，2026-11-21 用户批准 D1–D7）。
 
 ## 一句话

@@ -117,6 +117,21 @@ def _cmd_monitor_summary(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_freeze_test(args: argparse.Namespace) -> int:
+    from reviewpulse.final_eval import freeze
+
+    print(json.dumps(freeze(args.run_id, split_config=args.split), indent=2, sort_keys=True))
+    return 0
+
+
+def _cmd_evaluate_test(args: argparse.Namespace) -> int:
+    from reviewpulse.final_eval import evaluate_test
+
+    record = evaluate_test(args.run_id, confirm_final=args.confirm_final, split_config=args.split)
+    print(json.dumps(record, indent=2, sort_keys=True))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reviewpulse")
     groups = parser.add_subparsers(dest="group", required=True)
@@ -155,6 +170,17 @@ def build_parser() -> argparse.ArgumentParser:
         p.add_argument("--actor", default="local-cli")
         p.set_defaults(handler=_cmd_promote)
 
+    p_freeze = groups.add_parser("freeze-test", help="freeze configs and runs for the test eval")
+    p_freeze.add_argument("--run-id", action="append", required=True)
+    p_freeze.add_argument("--split", default="configs/split.yaml")
+    p_freeze.set_defaults(handler=_cmd_freeze_test)
+
+    p_test = groups.add_parser("evaluate-test", help="one-shot final test evaluation of a run")
+    p_test.add_argument("--run-id", required=True)
+    p_test.add_argument("--confirm-final", action="store_true")
+    p_test.add_argument("--split", default="configs/split.yaml")
+    p_test.set_defaults(handler=_cmd_evaluate_test)
+
     p_serve = groups.add_parser("serve", help="run the recommendation API (single worker)")
     p_serve.add_argument("--host", default=None)
     p_serve.add_argument("--port", type=int, default=None)
@@ -179,6 +205,7 @@ def main(argv: list[str] | None = None) -> int:
     from reviewpulse.data.contracts import DataContractError
     from reviewpulse.evaluation.evaluator import EvaluationError
     from reviewpulse.evaluation.protocol import ProtocolError
+    from reviewpulse.final_eval import FinalEvalError
     from reviewpulse.keys import UserKeyError
     from reviewpulse.models.bpr import BPRError
     from reviewpulse.registry.champion import PromotionError
@@ -198,6 +225,7 @@ def main(argv: list[str] | None = None) -> int:
         QualityConfigError,
         ReleaseIdError,
         PromotionError,
+        FinalEvalError,
     )
 
     parser = build_parser()

@@ -148,3 +148,40 @@ release 大小：BPR 184MB，Pop 47MB（`seen_items.json` 含 50 万个 user_key
 
 ### 明天第一件事
 Day 4 的 T11：FastAPI 的 lifespan、`/health`、`/ready`、`/v1/recommend`（用 `load_release` 加载 champion，推荐走同一个 `rank()`）。
+
+## Day 4（2026-11-23（一），比计划提前两天）
+
+| Task | 状态 | 证据 |
+|---|---|---|
+| T11 FastAPI | 已实现 / 已测试；真实 release 已在本地跑过 | API-T01..07 通过 |
+| T12 事件 + monitor summary | 已实现 / 已测试；真实数据已跑 | MON-T01..04 通过 |
+| T13a E2E + CI | E2E 和 OPS-T03 本地通过；**CI 还没有推到 GitHub，未验证** | `tests/test_e2e.py`（全部通过 CLI）、`.github/workflows/ci.yml` |
+| T13b Dockerfile | 已实现，**本地已验证 OPS-T02** | 本地 build 成功（231 秒，2.15GB，torch 2.15.0+cpu）；没有 champion 时 `/health` 200、`/ready` 503 `NO_CHAMPION` |
+
+### 验证命令
+- `ruff check .`、`ruff format --check .` → exit 0
+- `pytest` → 216 passed，exit 0
+- `docker build -t reviewpulse:local .` → exit 0
+- `docker run`，挂空的 state 和 releases → `/health` 200，`/ready` 503，`/v1/recommend` 503 `MODEL_NOT_READY`
+- `docker run`，挂真实的 state 和 releases（`--env-file .env`）→ 约 10 秒 ready，推荐返回 200
+- `reviewpulse serve`（本地，真实 champion `rel-1fd01c0aa3d4`）→ 已知用户、未知用户、`top_k=0` 三种请求分别返回 200、200、422
+
+### 真实数据的延迟（200 个请求，已知用户和未知用户各 100，top_k=10，本机 Windows，单 worker）
+| 口径 | p50 | p95 |
+|---|---|---|
+| 服务端（`monitor summary`，事件里的 latency_ms） | 2.05 ms | **2.42 ms** |
+| 客户端（httpx 顺序请求，含 HTTP 往返） | 7.05 ms | **7.87 ms** |
+
+`monitor summary` 的统计范围包括 200 个计时请求、5 个预热请求和 3 个演示请求，共 208 条，其中 1 条是 422。fallback_rate = 0，原因见下面"待决定"。
+隐私扫描：`state/events.db` 和 `logs/serve.log` 对照 631,986 个真实 user_id，命中 0。
+
+### 待决定（规格不明确）
+API-02 写的是"未知用户 → pop_fallback，fallback_used=true"。当 champion 是 **Pop** 时，现在的实现对所有用户都返回 `fallback_used=false`，因为 Pop 模型给每个人打的分都一样，评估器里的 `fallback_user_count` 也是 0，两边是一致的。问题在于，这样监控里的 fallback 率永远是 0，容易被误读成"所有人都拿到了个性化推荐"。可选方案见当天汇报。
+
+### 未完成 / 未验证
+- CI 没有在 GitHub 上跑过：还没有 remote，需要用户提供仓库名和可见性。
+- Docker 镜像以 uid 1000 运行。在 Linux 主机上挂载卷时，如果宿主目录属于别的 uid，写 `state/` 会失败（Windows 的 Docker Desktop 没有这个问题）。README 里会写明 `--user $(id -u)` 的用法。
+- 镜像 2.15GB 偏大，主要是 torch 和 mlflow。serving 其实用不到 mlflow，可以拆成可选依赖，暂时没做。
+
+### 明天第一件事
+确认 CI 是绿的。然后做 Day 5 的 T14：冻结配置，`evaluate-test` 对 Pop 和选定的 BPR 各跑**一次**。

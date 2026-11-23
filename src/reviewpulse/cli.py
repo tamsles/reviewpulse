@@ -19,6 +19,15 @@ def _cmd_data_prepare(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_data_split(args: argparse.Namespace) -> int:
+    from reviewpulse.data.split import load_split_config, split
+
+    cfg = load_split_config(paths.resolve(args.split))
+    manifest = split(cfg)
+    print(json.dumps(manifest, indent=2, sort_keys=True))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reviewpulse")
     groups = parser.add_subparsers(dest="group", required=True)
@@ -28,6 +37,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_prepare = data_cmds.add_parser("prepare", help="raw reviews -> normalized parquet")
     p_prepare.add_argument("--source", default="configs/source.yaml")
     p_prepare.set_defaults(handler=_cmd_data_prepare)
+    p_split = data_cmds.add_parser("split", help="temporal split into train/valid/test")
+    p_split.add_argument("--split", default="configs/split.yaml")
+    p_split.set_defaults(handler=_cmd_data_split)
     return parser
 
 

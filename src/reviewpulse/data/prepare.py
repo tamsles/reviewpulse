@@ -20,8 +20,13 @@ from reviewpulse.data.contracts import (
     SourceConfig,
     validate_raw_records,
 )
-from reviewpulse.io_utils import sha256_file, sha256_lines, utc_now_iso, write_json_atomic
-from reviewpulse.io_utils import write_parquet_atomic
+from reviewpulse.io_utils import (
+    sha256_file,
+    sha256_lines,
+    utc_now_iso,
+    write_json_atomic,
+    write_parquet_atomic,
+)
 
 INTERACTIONS_FILE = "interactions.parquet"
 MANIFEST_FILE = "manifest.json"

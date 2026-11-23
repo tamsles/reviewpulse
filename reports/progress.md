@@ -91,3 +91,60 @@ Day 2 的 T04：`rank()` + 评估器 + Golden Case 测试（TE-T07/T08、EVAL-T0
 
 ### 明天第一件事
 Day 3 的 T08：`release/package.py` + `loader.py`。
+
+## Day 3（2026-11-23（一），比计划提前一天）
+
+| Task | 状态 | 证据 |
+|---|---|---|
+| T08 package + loader | 已实现 / 已测试；真实数据已打包 | REL-T01..05 通过 |
+| T09 gate | 已实现 / 已测试；真实数据已跑 | GATE-T01..04 通过；C-05 签名测试通过 |
+| T10 champion CAS | 已实现 / 已测试；真实数据已晋升 | PROM-T01..05 通过（PROM-T03 用两个真实线程，连续重复 5 次都通过） |
+
+规格补充（用户批准，已写进 `04-release-gate-promotion.md`）：`pop_fallback.json` 存 `[item_id, score]` 列表；Pop 基线从 `releases/` 中三个哈希一致的 Pop release 里找；门禁决定写到 `state/gate/`。
+实现上的扩展：`promotion_log` 多一列 `gate_decision_sha256`（回滚时恢复用）；dry-run 完全不写数据库；门禁跑完后 champion 如果已经变了，写入视为 `CONFLICT`；`release_id` 校验格式，防止路径穿越。
+
+### 验证命令
+- `ruff check .`、`ruff format --check .` → exit 0
+- `pytest` → 172 passed，exit 0
+- `reviewpulse package` ×3 → exit 0，每个约 25 秒
+- `reviewpulse gate` ×3 → Pop exit 0，另外两个 exit 3（REJECTED）
+- `reviewpulse promote --expected-version 0` → exit 0（DRY_RUN，没有生成 registry.db）
+- `reviewpulse promote --expected-version 0 --execute` → exit 0（PROMOTED）
+- 真实 release 扫描：24 个文件对照 631,986 个真实 user_id，命中 0
+
+### 真实数据 release 和门禁结果
+| release | 模型 | run | build | 门禁 | 原因 |
+|---|---|---|---|---|---|
+| `rel-1fd01c0aa3d4` | Pop | `0711a659…` | `741fa16`，clean | **PASSED** | 0.008416 ≥ 0.004；第 5、6 条跳过（Pop 本身就是基线，也还没有 champion） |
+| `rel-afe1b95456a0` | BPR | `9c62b80a…` | `0338be2`，clean | REJECTED | `NOT_BETTER_THAN_POP`：0.004583 ≤ 0.008416 + 0.0025（基线是 `rel-1fd01c0aa3d4`） |
+| `rel-fb924c045eab` | Pop | `1ac6483d…` | `0539759`，**dirty** | REJECTED | `DIRTY_BUILD` |
+
+为什么会有 dirty 的 Pop：Day 2 跑 Pop 时，我把输出重定向到了 `reports/.pop_run.json`。shell 在训练开始前就创建了这个文件，于是这次 run 被如实记成 dirty。之后在干净的工作区上重训了 Pop（run `0711a659`），指标和计数逐位相同（NDCG 0.008416187638440997）。dirty 的那个 release 保留下来，作为门禁拒绝 dirty build 的真实例子。
+
+release 大小：BPR 184MB，Pop 47MB（`seen_items.json` 含 50 万个 user_key）。
+
+### `champion show --history 5`
+```json
+{
+  "champion": {
+    "actor": "local-cli",
+    "gate_decision_sha256": "8a3d160623183f19b4edcf2914fafff5cd1475ad0f4f27dab11b1b60b6d9adaf",
+    "previous_release_id": null,
+    "promoted_at_utc": "2026-11-23T07:28:51Z",
+    "release_id": "rel-1fd01c0aa3d4",
+    "schema_version": "1",
+    "version_counter": 1
+  },
+  "history": [
+    {"action": "PROMOTE", "actor": "local-cli", "expected_version": 0, "id": 1, "reason": null,
+     "release_id": "rel-1fd01c0aa3d4", "status": "PROMOTED", "time_utc": "2026-11-23T07:28:51Z"}
+  ]
+}
+```
+
+### 未完成 / 未验证
+- 门禁找 Pop 基线时不检查基线本身是不是 dirty build。这次的基线是 clean 的那个，而且两个 Pop 的指标完全相同，所以没影响。
+- 每次 CLI 启动都会 import torch，大约慢 1～2 秒，没有优化。
+
+### 明天第一件事
+Day 4 的 T11：FastAPI 的 lifespan、`/health`、`/ready`、`/v1/recommend`（用 `load_release` 加载 champion，推荐走同一个 `rank()`）。

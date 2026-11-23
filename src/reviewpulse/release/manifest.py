@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from functools import cache
 from pathlib import Path
 from typing import Any
@@ -25,6 +26,11 @@ FILE_NAMES = {
     "evaluation": "evaluation.json",
 }
 MODEL_FILE_NAMES = {"Pop": "pop.json", "BPR": "model.pt"}
+RELEASE_ID_RE = re.compile(r"^rel-[a-f0-9]{12}$")
+
+
+class ReleaseIdError(ValueError):
+    """Raised for a malformed release id (also prevents path traversal)."""
 
 
 @cache
@@ -45,5 +51,11 @@ def releases_dir() -> Path:
     return paths.resolve(RELEASES_DIR)
 
 
+def check_release_id(release_id: str) -> str:
+    if not isinstance(release_id, str) or not RELEASE_ID_RE.match(release_id):
+        raise ReleaseIdError(f"invalid release id {release_id!r} (expected rel-<12 hex>)")
+    return release_id
+
+
 def release_path(release_id: str) -> Path:
-    return releases_dir() / release_id
+    return releases_dir() / check_release_id(release_id)

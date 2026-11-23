@@ -23,6 +23,7 @@ from reviewpulse.release.manifest import (
     FILE_NAMES,
     MANIFEST_FILE,
     MODEL_FILE_NAMES,
+    ReleaseIdError,
     compute_release_id,
     release_manifest_schema,
     release_path,
@@ -184,7 +185,13 @@ def load_release(
     release: str | Path, keyer: UserKeyer | None = None, smoke: bool = True
 ) -> LoadedRelease:
     """Load and verify a release by id (under RP_HOME/releases) or by directory path."""
-    path = Path(release) if isinstance(release, Path) else release_path(release)
+    if isinstance(release, Path):
+        path = release
+    else:
+        try:
+            path = release_path(release)
+        except ReleaseIdError as exc:
+            raise BundleInvalid("FILE_MISSING", str(exc)) from exc
     if not path.is_dir():
         raise BundleInvalid("FILE_MISSING", f"release directory {path.name} not found")
     manifest = _check_manifest(path)

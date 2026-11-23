@@ -65,6 +65,14 @@ def _cmd_package(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_gate(args: argparse.Namespace) -> int:
+    from reviewpulse.registry.gate import gate
+
+    decision = gate(args.release_id)
+    print(json.dumps(decision.to_dict(), indent=2, sort_keys=True))
+    return 0 if decision.passed else 3
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reviewpulse")
     groups = parser.add_subparsers(dest="group", required=True)
@@ -90,6 +98,10 @@ def build_parser() -> argparse.ArgumentParser:
     p_pkg.add_argument("--split", default="configs/split.yaml")
     p_pkg.add_argument("--allow-dirty", action="store_true")
     p_pkg.set_defaults(handler=_cmd_package)
+
+    p_gate = groups.add_parser("gate", help="run the quality gate for a release (read-only)")
+    p_gate.add_argument("--release-id", required=True)
+    p_gate.set_defaults(handler=_cmd_gate)
     return parser
 
 
@@ -99,7 +111,9 @@ def main(argv: list[str] | None = None) -> int:
     from reviewpulse.evaluation.protocol import ProtocolError
     from reviewpulse.keys import UserKeyError
     from reviewpulse.models.bpr import BPRError
+    from reviewpulse.registry.gate import QualityConfigError
     from reviewpulse.release.loader import BundleInvalid
+    from reviewpulse.release.manifest import ReleaseIdError
     from reviewpulse.release.package import PackageError
 
     handled = (
@@ -110,6 +124,8 @@ def main(argv: list[str] | None = None) -> int:
         BPRError,
         BundleInvalid,
         PackageError,
+        QualityConfigError,
+        ReleaseIdError,
     )
 
     parser = build_parser()

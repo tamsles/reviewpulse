@@ -218,3 +218,14 @@ Day 5 的 T14：冻结配置，`evaluate-test` 对 Pop 和选定的 BPR 各跑**
 - T17 情感分类没有做。
 - 没有录终端演示 GIF（可选项）。
 - `license_review_status` 仍为 `pending`。
+
+## Day 5 追加（2026-11-23）
+
+### 修复：test 记录的哈希不一致
+- 问题：`reports/test_runs.log` 里两条正式记录的 `evaluation_sha256`，是 Windows 上写出的 CRLF 文件的哈希；Git 里保存的是 LF 文件，clone 下来对不上。
+- 处理：**原有记录一行都没改**。为每个 run 各追加一条 `formal: false` 的 `evaluation_sha256_correction` 记录（731a2e0c→235f8597，cf290de1→53c30a18）。追加前先验证了"LF 文件换回 CRLF 后，正好等于原哈希"，也就是内容完全相同。工作区里的 4 个报告文件已经重新检出为 LF。
+- 新增：`final_eval.verify_test_records()` / `correct_evaluation_hash()`。前者检查正式记录和文件是否一致，后者在内容有任何其他改动时都会拒绝更正。`tests/test_reports_integrity.py` 在 CI 里检查真实的报告文件：哈希链一致、每个 run 正好一条正式记录、配置自冻结以来没变、报告文件都是 LF。修复前这个测试是失败的（能抓到这个问题），修复后通过。
+- 配置文件不受影响：4 个 yaml 在冻结时就是 LF，冻结时记录的哈希和 Git 里的文件一致。
+
+### 待办（用户决定先不处理）
+- **v1.1 设计文档不在公开仓库里**：README 的"生产化还需要什么"目前链接的是 `docs/specs/CHANGES-v1.2.md` 和 ADR-0009。v1.1 原文在仓库外的 `../reviewpulse-specs-v1.1/`。以后要决定是否把它（或它的摘要）放进仓库，以及放之前是否需要脱敏。

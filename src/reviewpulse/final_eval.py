@@ -74,7 +74,95 @@ def freeze(run_ids: list[str], split_config: str = "configs/split.yaml") -> dict
     return frozen
 
 
+CORRECTION_TYPE = "evaluation_sha256_correction"
+
+
+def _append_log(record: dict[str, Any]) -> None:
+    log_path = paths.resolve(TEST_LOG)
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    with log_path.open("a", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(record, sort_keys=True) + "\n")
+
+
+def _sha256_bytes(data: bytes) -> str:
+    import hashlib
+
+    return hashlib.sha256(data).hexdigest()
+
+
+def expected_evaluation_sha256(run_id: str, records: list[dict[str, Any]]) -> str:
+    """The formal hash of a run's evaluation file, after any recorded correction."""
+    formal = [r for r in records if r.get("formal") and r.get("run_id") == run_id]
+    if len(formal) != 1:
+        raise FinalEvalError(f"run {run_id} has {len(formal)} formal records (expected 1)")
+    sha = formal[0]["evaluation_sha256"]
+    for r in records:
+        if r.get("type") == CORRECTION_TYPE and r.get("run_id") == run_id:
+            if r["original_evaluation_sha256"] != sha:
+                raise FinalEvalError(f"correction for {run_id} does not chain to the record")
+            sha = r["evaluation_sha256"]
+    return sha
+
+
+def verify_test_records() -> list[str]:
+    """Check every formal test record against its committed evaluation file.
+
+    Returns a list of problems (empty = consistent).
+    """
+    records = _formal_records()
+    problems = []
+    for rec in (r for r in records if r.get("formal")):
+        f = paths.resolve(rec["evaluation_file"])
+        if not f.is_file():
+            problems.append(f"{rec['run_id']}: evaluation file missing")
+            continue
+        try:
+            want = expected_evaluation_sha256(rec["run_id"], records)
+        except FinalEvalError as exc:
+            problems.append(str(exc))
+            continue
+        if sha256_file(f) != want:
+            problems.append(f"{rec['run_id']}: evaluation file sha256 differs from the log")
+        ev = json.loads(f.read_text(encoding="utf-8"))
+        for key in ("metrics", "counts", "split_sha256", "ground_truth_sha256"):
+            if ev.get(key) != rec.get(key):
+                problems.append(f"{rec['run_id']}: evaluation file {key} differs from the log")
+    return problems
+
+
+def correct_evaluation_hash(run_id: str, reason: str) -> dict[str, Any] | None:
+    """Append a non-formal record fixing a hash that differs only by CRLF line endings.
+
+    Refuses if the file content differs in any other way. Returns None if the
+    recorded hash already matches. Never edits or removes existing records.
+    """
+    records = _formal_records()
+    current_expected = expected_evaluation_sha256(run_id, records)
+    formal = next(r for r in records if r.get("formal") and r.get("run_id") == run_id)
+    data = paths.resolve(formal["evaluation_file"]).read_bytes()
+    actual = _sha256_bytes(data)
+    if actual == current_expected:
+        return None
+    if b"\r" in data:
+        raise FinalEvalError("evaluation file still has CRLF line endings; check it out as LF")
+    if _sha256_bytes(data.replace(b"\n", b"\r\n")) != current_expected:
+        raise FinalEvalError(f"{run_id}: content differs beyond line endings; refusing to correct")
+    correction = {
+        "formal": False,
+        "type": CORRECTION_TYPE,
+        "run_id": run_id,
+        "corrected_at_utc": utc_now_iso(),
+        "original_evaluation_sha256": current_expected,
+        "evaluation_sha256": actual,
+        "line_endings": {"original": "CRLF", "corrected": "LF"},
+        "reason": reason,
+    }
+    _append_log(correction)
+    return correction
+
+
 def _formal_records() -> list[dict[str, Any]]:
+    """All log records (formal and corrections), in order."""
     path = paths.resolve(TEST_LOG)
     if not path.exists():
         return []
@@ -161,8 +249,5 @@ def evaluate_test(
         "evaluation_file": f"{TEST_EVAL_DIR}/{run_id}.json",
         "evaluation_sha256": sha256_file(eval_path),
     }
-    log_path = paths.resolve(TEST_LOG)
-    log_path.parent.mkdir(parents=True, exist_ok=True)
-    with log_path.open("a", encoding="utf-8", newline="\n") as f:
-        f.write(json.dumps(record, sort_keys=True) + "\n")
+    _append_log(record)
     return record

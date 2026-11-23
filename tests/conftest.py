@@ -81,7 +81,8 @@ def trained_home(tmp_path_factory):
     (home / "configs" / "source.yaml").write_text(yaml.safe_dump(src))
     for name in ("split.yaml", "train.yaml"):
         shutil.copy(FIXTURES / name, home / "configs" / name)
-    shutil.copy(Path(__file__).parents[1] / "configs" / "quality.yaml", home / "configs")
+    for name in ("quality.yaml", "runtime.yaml"):
+        shutil.copy(Path(__file__).parents[1] / "configs" / name, home / "configs")
     from reviewpulse import tracking
 
     mp = pytest.MonkeyPatch()

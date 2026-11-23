@@ -1,0 +1,7 @@
+# Runtime config for the API (spec 05/06). Never put secret values here.
+runtime:
+  max_top_k: 50          # must be <= 50 (API contract)
+  min_events: 20         # monitor summary: groups below this show INSUFFICIENT_DATA
+  user_key_env: RP_USER_KEY
+  host: 127.0.0.1
+  port: 8000

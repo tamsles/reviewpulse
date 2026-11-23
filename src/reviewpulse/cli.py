@@ -95,6 +95,18 @@ def _cmd_champion_show(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    import uvicorn
+
+    from reviewpulse.serving.app import create_app, load_runtime
+
+    rt = load_runtime()
+    host = args.host or rt["host"]
+    port = args.port or rt["port"]
+    uvicorn.run(create_app(background_load=True), host=host, port=port, workers=1)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reviewpulse")
     groups = parser.add_subparsers(dest="group", required=True)
@@ -132,6 +144,11 @@ def build_parser() -> argparse.ArgumentParser:
         p.add_argument("--execute", action="store_true", help="actually move the pointer")
         p.add_argument("--actor", default="local-cli")
         p.set_defaults(handler=_cmd_promote)
+
+    p_serve = groups.add_parser("serve", help="run the recommendation API (single worker)")
+    p_serve.add_argument("--host", default=None)
+    p_serve.add_argument("--port", type=int, default=None)
+    p_serve.set_defaults(handler=_cmd_serve)
 
     champ = groups.add_parser("champion", help="champion pointer")
     champ_cmds = champ.add_subparsers(dest="command", required=True)

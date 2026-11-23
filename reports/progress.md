@@ -155,7 +155,7 @@ Day 4 的 T11：FastAPI 的 lifespan、`/health`、`/ready`、`/v1/recommend`（
 |---|---|---|
 | T11 FastAPI | 已实现 / 已测试；真实 release 已在本地跑过 | API-T01..07 通过 |
 | T12 事件 + monitor summary | 已实现 / 已测试；真实数据已跑 | MON-T01..04 通过 |
-| T13a E2E + CI | E2E 和 OPS-T03 本地通过；**CI 还没有推到 GitHub，未验证** | `tests/test_e2e.py`（全部通过 CLI）、`.github/workflows/ci.yml` |
+| T13a E2E + CI | 已实现 / 已测试；**CI 绿** | GitHub Actions run 45135936237（commit `fa53e21`）：`test` job（lint + pytest）success，`docker` job（build + OPS-T02）success |
 | T13b Dockerfile | 已实现，**本地已验证 OPS-T02** | 本地 build 成功（231 秒，2.15GB，torch 2.15.0+cpu）；没有 champion 时 `/health` 200、`/ready` 503 `NO_CHAMPION` |
 
 ### 验证命令
@@ -179,9 +179,8 @@ Day 4 的 T11：FastAPI 的 lifespan、`/health`、`/ready`、`/v1/recommend`（
 champion 是 Pop 时，`train_end` 前没有任何评论的用户返回 `fallback_used=true`：Pop 模型只"认识" `seen_items` 里的用户，其余用户走同一个 `rank()` 的回退路径。推荐结果不变，离线评估口径不变（`fallback_user_count` 仍为 0）。上面 200 个请求的延迟测试是在改动前跑的，所以当时的 fallback_rate 显示 0；按新规则，那批请求里一半是未知用户，fallback_rate 会是约 0.5。
 
 ### 未完成 / 未验证
-- CI 没有在 GitHub 上跑过：还没有 remote，需要用户提供仓库名和可见性。
 - Docker 镜像以 uid 1000 运行。在 Linux 主机上挂载卷时，如果宿主目录属于别的 uid，写 `state/` 会失败（Windows 的 Docker Desktop 没有这个问题）。README 里会写明 `--user $(id -u)` 的用法。
 - 镜像 2.15GB 偏大，主要是 torch 和 mlflow。serving 其实用不到 mlflow，可以拆成可选依赖，暂时没做。
 
 ### 明天第一件事
-确认 CI 是绿的。然后做 Day 5 的 T14：冻结配置，`evaluate-test` 对 Pop 和选定的 BPR 各跑**一次**。
+Day 5 的 T14：冻结配置，`evaluate-test` 对 Pop 和选定的 BPR 各跑**一次**。

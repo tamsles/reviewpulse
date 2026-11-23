@@ -1,0 +1,13 @@
+{"user_id": "synthetic-u1", "parent_asin": "synthetic-item-a", "rating": 5.0, "timestamp": 1667469600000, "text": "Great sound.", "verified_purchase": null}
+{"user_id": "synthetic-u1", "parent_asin": "synthetic-item-b", "rating": 4.0, "timestamp": 1668247200000, "text": "Nice product.", "verified_purchase": null}
+{"user_id": "synthetic-u2", "parent_asin": "synthetic-item-a", "rating": 4.0, "timestamp": 1668852000000, "text": "Works well.", "verified_purchase": null}
+{"user_id": "synthetic-u2", "parent_asin": "synthetic-item-c", "rating": 2.0, "timestamp": 1670061600000, "text": "Poor battery.", "verified_purchase": null}
+{"user_id": "synthetic-u3", "parent_asin": "synthetic-item-c", "rating": 5.0, "timestamp": 1671271200000, "text": "Good value.", "verified_purchase": null}
+{"user_id": "synthetic-u3", "parent_asin": "synthetic-item-d", "rating": 1.0, "timestamp": 1671703200000, "text": "Broke quickly.", "verified_purchase": null}
+{"user_id": "synthetic-u1", "parent_asin": "synthetic-item-c", "rating": 4.0, "timestamp": 1673949600000, "text": "Fits well.", "verified_purchase": null}
+{"user_id": "synthetic-u2", "parent_asin": "synthetic-item-b", "rating": 5.0, "timestamp": 1675245600000, "text": "Excellent.", "verified_purchase": null}
+{"user_id": "synthetic-u3", "parent_asin": "synthetic-item-a", "rating": 3.0, "timestamp": 1676196000000, "text": "It's okay.", "verified_purchase": null}
+{"user_id": "synthetic-u1", "parent_asin": "synthetic-item-e", "rating": 2.0, "timestamp": 1681034400000, "text": "Disappointing.", "verified_purchase": null}
+{"user_id": "synthetic-u2", "parent_asin": "synthetic-item-d", "rating": 5.0, "timestamp": 1681293600000, "text": "Very good.", "verified_purchase": null}
+{"user_id": "synthetic-u4", "parent_asin": "synthetic-item-e", "rating": 4.0, "timestamp": 1681639200000, "text": "Useful.", "verified_purchase": null}
+{"user_id": "synthetic-u1", "parent_asin": "synthetic-item-a", "rating": 5.0, "timestamp": 1682330400000, "text": "Bought again, still great.", "verified_purchase": null}

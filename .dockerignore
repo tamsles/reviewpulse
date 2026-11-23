@@ -1,0 +1,17 @@
+.git
+.github
+.venv
+.vscode
+.env
+data
+logs
+mlruns
+mlartifacts
+mlflow.db
+state
+releases
+tests
+docs
+reports
+scripts
+**/__pycache__

@@ -1,0 +1,13 @@
+# Training config (spec 03, MODEL-03). Hyperparameters are selected on validation only.
+seed: 42
+mlflow:
+  experiment: reviewpulse
+bpr:
+  default: {dim: 64, lr: 0.001, reg: 0.0001}
+  grid:                      # at most 8 combinations
+    dim: [32, 64]
+    lr: [0.001, 0.005]
+    reg: [0.00001, 0.0001]
+  max_epochs: 50
+  patience: 5
+  batch_size: 4096

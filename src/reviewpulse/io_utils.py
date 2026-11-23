@@ -53,9 +53,14 @@ def write_parquet_atomic(df: pd.DataFrame, path: str | Path, schema: pa.Schema) 
     os.replace(tmp, path)
 
 
+def write_text_lf(path: str | Path, text: str) -> None:
+    """Write UTF-8 text with LF line endings on every OS, so file hashes match git."""
+    Path(path).write_text(text, encoding="utf-8", newline="\n")
+
+
 def write_json_atomic(obj: Any, path: str | Path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = _tmp_path(path)
-    tmp.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    write_text_lf(tmp, json.dumps(obj, indent=2, sort_keys=True) + "\n")
     os.replace(tmp, path)

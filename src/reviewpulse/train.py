@@ -206,7 +206,9 @@ def _sha(inp: Inputs) -> str:
 
 
 def _write(path: Path, obj: Any) -> None:
-    path.write_text(json.dumps(obj, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(obj, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 def train(

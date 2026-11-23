@@ -163,6 +163,6 @@ def evaluate_test(
     }
     log_path = paths.resolve(TEST_LOG)
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    with log_path.open("a", encoding="utf-8") as f:
+    with log_path.open("a", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps(record, sort_keys=True) + "\n")
     return record

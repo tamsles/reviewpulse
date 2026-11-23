@@ -60,7 +60,8 @@ class PopModel:
         path = Path(directory) / POP_FILE
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {"format": POP_FORMAT, "kind": self.kind, "scores": self.scores}
-        path.write_text(json.dumps(payload, sort_keys=True, indent=1) + "\n", encoding="utf-8")
+        text = json.dumps(payload, sort_keys=True, indent=1) + "\n"
+        path.write_text(text, encoding="utf-8", newline="\n")
         return path
 
     @classmethod

@@ -114,3 +114,13 @@ def test_cli_evaluate_test(frozen, capsys):
     assert cli.main(argv) == 0
     capsys.readouterr()
     assert cli.main(argv) == 1
+
+
+def test_written_json_uses_lf_on_every_os(frozen, tmp_path):
+    from reviewpulse.io_utils import write_json_atomic
+
+    write_json_atomic({"a": [1, 2]}, tmp_path / "x.json")
+    assert b"\r" not in (tmp_path / "x.json").read_bytes()
+    rec = evaluate_test(frozen["pop_run"], confirm_final=True)
+    for rel in (rec["evaluation_file"], "reports/test_runs.log", "reports/frozen_config.json"):
+        assert b"\r" not in (frozen["home"] / rel).read_bytes(), rel

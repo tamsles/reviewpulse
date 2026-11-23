@@ -20,7 +20,7 @@ from reviewpulse import paths, tracking
 from reviewpulse.data.contracts import DataContractError
 from reviewpulse.data.split import load_split_config
 from reviewpulse.evaluation.protocol import protocol_sha256
-from reviewpulse.io_utils import sha256_file, utc_now_iso
+from reviewpulse.io_utils import sha256_file, utc_now_iso, write_text_lf
 from reviewpulse.keys import UserKeyer
 from reviewpulse.models.pop import POP_FILE, PopModel
 from reviewpulse.release.manifest import (
@@ -37,7 +37,7 @@ class PackageError(RuntimeError):
 
 
 def _dump(obj: Any, path: Path) -> None:
-    path.write_text(json.dumps(obj, sort_keys=True, separators=(",", ":")) + "\n", "utf-8")
+    write_text_lf(path, json.dumps(obj, sort_keys=True, separators=(",", ":")) + "\n")
 
 
 def pop_fallback_payload(pop: PopModel) -> list[list]:
@@ -164,8 +164,8 @@ def package(
                 "created_at_utc": utc_now_iso(),
             }
             manifest["release_id"] = compute_release_id(manifest)
-            (staging / MANIFEST_FILE).write_text(
-                json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+            write_text_lf(
+                staging / MANIFEST_FILE, json.dumps(manifest, indent=2, sort_keys=True) + "\n"
             )
             final = releases / manifest["release_id"]
             if final.exists():

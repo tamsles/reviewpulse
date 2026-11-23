@@ -67,7 +67,7 @@ def _weights(emb: torch.nn.Embedding) -> np.ndarray:
 
 
 def _write_json(obj: object, path: Path) -> None:
-    path.write_text(json.dumps(obj, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(json.dumps(obj, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
 
 
 class BPRModel:

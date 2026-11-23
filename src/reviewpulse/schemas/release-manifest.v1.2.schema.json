@@ -1,0 +1,78 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewPulse ReleaseManifest v1.2",
+  "description": "Simplified release bundle manifest (ADR-0009). Hash contents, mapping shapes and key fingerprint are checked at runtime by release/loader.py.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "release_id", "rec_model", "dataset", "user_key", "files", "build", "created_at_utc"],
+  "$defs": {
+    "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "pattern": "^[^/\\\\]+$"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "properties": {
+    "schema_version": {"const": "1.2"},
+    "release_id": {"type": "string", "pattern": "^rel-[a-f0-9]{12}$"},
+    "rec_model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "run_id", "training_window_end_utc"],
+      "properties": {
+        "kind": {"enum": ["Pop", "BPR"]},
+        "run_id": {"type": "string", "minLength": 1},
+        "training_window_end_utc": {"type": "string", "format": "date-time", "description": "Must equal dataset.history_cutoff_utc and split train_end (runtime check)"}
+      }
+    },
+    "dataset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["normalized_sha256", "split_sha256", "protocol_sha256", "history_cutoff_utc"],
+      "properties": {
+        "normalized_sha256": {"$ref": "#/$defs/sha256"},
+        "split_sha256": {"$ref": "#/$defs/sha256"},
+        "protocol_sha256": {"$ref": "#/$defs/sha256"},
+        "history_cutoff_utc": {"type": "string", "format": "date-time"}
+      }
+    },
+    "user_key": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["scheme", "key_id"],
+      "properties": {
+        "scheme": {"const": "hmac-sha256"},
+        "key_id": {"type": "string", "pattern": "^[a-f0-9]{16}$", "description": "First 16 hex of HMAC-SHA256(RP_USER_KEY, 'reviewpulse/key-id/v1'); never the key itself"}
+      }
+    },
+    "files": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "user_mapping", "item_mapping", "seen_items", "eligible_items", "pop_fallback", "evaluation"],
+      "properties": {
+        "model": {"$ref": "#/$defs/file"},
+        "user_mapping": {"$ref": "#/$defs/file"},
+        "item_mapping": {"$ref": "#/$defs/file"},
+        "seen_items": {"$ref": "#/$defs/file"},
+        "eligible_items": {"$ref": "#/$defs/file"},
+        "pop_fallback": {"$ref": "#/$defs/file"},
+        "evaluation": {"$ref": "#/$defs/file"}
+      }
+    },
+    "build": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["git_commit", "git_dirty"],
+      "properties": {
+        "git_commit": {"type": "string", "minLength": 1},
+        "git_dirty": {"type": "boolean", "description": "Packaging allowed when true (dev), but the gate rejects it (DIRTY_BUILD)"}
+      }
+    },
+    "created_at_utc": {"type": "string", "format": "date-time"}
+  }
+}

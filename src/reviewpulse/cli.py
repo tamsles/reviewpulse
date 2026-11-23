@@ -57,6 +57,14 @@ def _cmd_train(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_package(args: argparse.Namespace) -> int:
+    from reviewpulse.release.package import package
+
+    manifest = package(args.run_id, split_config=args.split, allow_dirty=args.allow_dirty)
+    print(json.dumps(manifest, indent=2, sort_keys=True))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reviewpulse")
     groups = parser.add_subparsers(dest="group", required=True)
@@ -76,6 +84,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_train.add_argument("--split", default="configs/split.yaml")
     p_train.add_argument("--train-config", default="configs/train.yaml")
     p_train.set_defaults(handler=_cmd_train)
+
+    p_pkg = groups.add_parser("package", help="package an MLflow run into a release")
+    p_pkg.add_argument("--run-id", required=True)
+    p_pkg.add_argument("--split", default="configs/split.yaml")
+    p_pkg.add_argument("--allow-dirty", action="store_true")
+    p_pkg.set_defaults(handler=_cmd_package)
     return parser
 
 
@@ -85,6 +99,18 @@ def main(argv: list[str] | None = None) -> int:
     from reviewpulse.evaluation.protocol import ProtocolError
     from reviewpulse.keys import UserKeyError
     from reviewpulse.models.bpr import BPRError
+    from reviewpulse.release.loader import BundleInvalid
+    from reviewpulse.release.package import PackageError
+
+    handled = (
+        DataContractError,
+        EvaluationError,
+        ProtocolError,
+        UserKeyError,
+        BPRError,
+        BundleInvalid,
+        PackageError,
+    )
 
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -94,7 +120,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
     try:
         return int(handler(args) or 0)
-    except (DataContractError, EvaluationError, ProtocolError, UserKeyError, BPRError) as exc:
+    except handled as exc:
         print(f"error: {exc}", file=sys.stderr)
         return 1
 

@@ -73,6 +73,28 @@ def _cmd_gate(args: argparse.Namespace) -> int:
     return 0 if decision.passed else 3
 
 
+_EXIT = {"DRY_RUN": 0, "PROMOTED": 0, "ROLLED_BACK": 0, "REJECTED": 3, "CONFLICT": 4}
+
+
+def _cmd_promote(args: argparse.Namespace) -> int:
+    from reviewpulse.registry.champion import promote, rollback
+
+    fn = promote if args.group == "promote" else rollback
+    result = fn(args.release_id, args.expected_version, execute=args.execute, actor=args.actor)
+    print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+    return _EXIT[result.status]
+
+
+def _cmd_champion_show(args: argparse.Namespace) -> int:
+    from reviewpulse.registry.champion import history, show
+
+    out = {"champion": show()}
+    if args.history:
+        out["history"] = history(args.history)
+    print(json.dumps(out, indent=2, sort_keys=True))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reviewpulse")
     groups = parser.add_subparsers(dest="group", required=True)
@@ -102,6 +124,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_gate = groups.add_parser("gate", help="run the quality gate for a release (read-only)")
     p_gate.add_argument("--release-id", required=True)
     p_gate.set_defaults(handler=_cmd_gate)
+
+    for name in ("promote", "rollback"):
+        p = groups.add_parser(name, help=f"{name} the champion pointer (dry-run by default)")
+        p.add_argument("--release-id", required=True)
+        p.add_argument("--expected-version", required=True, type=int)
+        p.add_argument("--execute", action="store_true", help="actually move the pointer")
+        p.add_argument("--actor", default="local-cli")
+        p.set_defaults(handler=_cmd_promote)
+
+    champ = groups.add_parser("champion", help="champion pointer")
+    champ_cmds = champ.add_subparsers(dest="command", required=True)
+    p_show = champ_cmds.add_parser("show", help="show the current champion")
+    p_show.add_argument("--history", type=int, default=0, help="also show N log entries")
+    p_show.set_defaults(handler=_cmd_champion_show)
     return parser
 
 
@@ -111,6 +147,7 @@ def main(argv: list[str] | None = None) -> int:
     from reviewpulse.evaluation.protocol import ProtocolError
     from reviewpulse.keys import UserKeyError
     from reviewpulse.models.bpr import BPRError
+    from reviewpulse.registry.champion import PromotionError
     from reviewpulse.registry.gate import QualityConfigError
     from reviewpulse.release.loader import BundleInvalid
     from reviewpulse.release.manifest import ReleaseIdError
@@ -126,6 +163,7 @@ def main(argv: list[str] | None = None) -> int:
         PackageError,
         QualityConfigError,
         ReleaseIdError,
+        PromotionError,
     )
 
     parser = build_parser()

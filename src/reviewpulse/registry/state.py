@@ -21,7 +21,8 @@ CREATE TABLE IF NOT EXISTS champion (
 INSERT OR IGNORE INTO champion (id, version_counter) VALUES (1, 0);
 CREATE TABLE IF NOT EXISTS promotion_log (
   id INTEGER PRIMARY KEY AUTOINCREMENT, time_utc TEXT, action TEXT,
-  release_id TEXT, expected_version INTEGER, status TEXT, reason TEXT, actor TEXT
+  release_id TEXT, expected_version INTEGER, status TEXT, reason TEXT, actor TEXT,
+  gate_decision_sha256 TEXT  -- extension: lets rollback restore the promotion's gate hash
 );
 """
 CHAMPION_COLUMNS = (
@@ -47,13 +48,20 @@ def connect(db_path: Path | None = None) -> sqlite3.Connection:
     return conn
 
 
+def connect_ro(db_path: Path | None = None) -> sqlite3.Connection | None:
+    """Read-only connection, or None if the registry does not exist yet (never writes)."""
+    path = db_path or registry_path()
+    if not path.exists():
+        return None
+    return sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True, timeout=30)
+
+
 def read_champion(db_path: Path | None = None) -> dict[str, Any]:
     """Champion state as in schemas/champion-state.v1. Missing db = no champion yet."""
-    path = db_path or registry_path()
     empty = {"schema_version": "1", **{c: None for c in CHAMPION_COLUMNS}, "version_counter": 0}
-    if not path.exists():
+    conn = connect_ro(db_path)
+    if conn is None:
         return empty
-    conn = sqlite3.connect(f"file:{path.as_posix()}?mode=ro", uri=True, timeout=30)
     try:
         row = conn.execute(
             f"SELECT {', '.join(CHAMPION_COLUMNS)} FROM champion WHERE id = 1"

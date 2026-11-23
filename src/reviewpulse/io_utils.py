@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import uuid
 from collections.abc import Iterable
 from datetime import UTC, datetime
 from pathlib import Path
@@ -37,7 +38,8 @@ def utc_now_iso() -> str:
 
 
 def _tmp_path(path: Path) -> Path:
-    return path.with_name(f".{path.name}.tmp")
+    # unique per writer so concurrent writers never share a temp file
+    return path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
 
 
 def write_parquet_atomic(df: pd.DataFrame, path: str | Path, schema: pa.Schema) -> None:

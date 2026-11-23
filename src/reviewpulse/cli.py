@@ -107,6 +107,16 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_monitor_summary(args: argparse.Namespace) -> int:
+    from reviewpulse.monitoring.events import read_events
+    from reviewpulse.monitoring.summary import summarize
+    from reviewpulse.serving.app import load_runtime
+
+    min_events = args.min_events if args.min_events is not None else load_runtime()["min_events"]
+    print(json.dumps(summarize(read_events(since=args.since), min_events), indent=2))
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="reviewpulse")
     groups = parser.add_subparsers(dest="group", required=True)
@@ -149,6 +159,13 @@ def build_parser() -> argparse.ArgumentParser:
     p_serve.add_argument("--host", default=None)
     p_serve.add_argument("--port", type=int, default=None)
     p_serve.set_defaults(handler=_cmd_serve)
+
+    mon = groups.add_parser("monitor", help="request monitoring")
+    mon_cmds = mon.add_subparsers(dest="command", required=True)
+    p_sum = mon_cmds.add_parser("summary", help="summarize request events")
+    p_sum.add_argument("--since", default=None, help="UTC ISO time, e.g. 2026-11-23T00:00:00Z")
+    p_sum.add_argument("--min-events", type=int, default=None)
+    p_sum.set_defaults(handler=_cmd_monitor_summary)
 
     champ = groups.add_parser("champion", help="champion pointer")
     champ_cmds = champ.add_subparsers(dest="command", required=True)

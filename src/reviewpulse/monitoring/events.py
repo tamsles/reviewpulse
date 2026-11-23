@@ -11,11 +11,11 @@ import logging
 import sqlite3
 import threading
 import uuid
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from reviewpulse import paths
-from reviewpulse.io_utils import utc_now_iso
 
 log = logging.getLogger("reviewpulse.events")
 
@@ -50,6 +50,11 @@ CREATE INDEX IF NOT EXISTS events_time ON events (time_utc);
 """
 
 
+def _now_ms() -> str:
+    """UTC time with millisecond precision, e.g. 2026-11-23T07:28:51.123Z."""
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + "Z"
+
+
 class EventStore:
     def __init__(self, path: Path):
         self.path = Path(path)
@@ -73,7 +78,7 @@ class EventStore:
         event = {
             "schema_version": "1",
             "event_id": str(uuid.uuid4()),
-            "time_utc": utc_now_iso(),
+            "time_utc": _now_ms(),
             **fields,
         }
         row = [event.get(c) for c in COLUMNS]
@@ -107,7 +112,7 @@ def read_events(path: Path | None = None, since: str | None = None) -> list[dict
         if since:
             sql += " WHERE time_utc >= ?"
             args.append(since)
-        rows = conn.execute(sql + " ORDER BY time_utc, event_id", args).fetchall()
+        rows = conn.execute(sql + " ORDER BY rowid", args).fetchall()
     finally:
         conn.close()
     out = []

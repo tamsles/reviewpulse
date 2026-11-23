@@ -45,7 +45,8 @@ def test_package_and_load(home_env, which, kind):
     assert rel.kind == kind
     # golden: u1 has seen a, b -> recommended c, d
     assert short(rel.recommend("synthetic-u1").item_ids) in (["c", "d"], ["d", "c"])
-    assert rel.recommend("never-seen-user").fallback is (kind == "BPR")
+    assert rel.recommend("never-seen-user").fallback is True
+    assert rel.recommend("synthetic-u1").fallback is False
 
 
 def test_package_is_idempotent(home_env):

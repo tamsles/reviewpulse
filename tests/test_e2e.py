@@ -85,7 +85,8 @@ def test_e2e_synthetic_pipeline(tmp_path, monkeypatch, capsys):
         unknown = client.post("/v1/recommend", json={"user_id": "someone-new", "top_k": 2})
         bad = client.post("/v1/recommend", json={"user_id": "synthetic-u1", "top_k": 0})
     assert short([i["item_id"] for i in known.json()["items"]]) == ["c", "d"]
-    assert unknown.json()["fallback_used"] is False  # Pop scores every user the same way
+    assert known.json()["fallback_used"] is False
+    assert unknown.json()["fallback_used"] is True  # no history before train_end
     assert bad.status_code == 422
 
     code, summary = _run(capsys, "monitor", "summary", "--min-events", "1")

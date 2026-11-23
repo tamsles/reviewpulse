@@ -24,8 +24,12 @@ class PopModelError(ValueError):
 class PopModel:
     kind = "Pop"
 
-    def __init__(self, scores: dict[str, int]):
+    def __init__(self, scores: dict[str, int], known_users: set[str] | None = None):
         self.scores = dict(scores)
+        # None = knows everyone (offline evaluation, fallback list). When serving a Pop
+        # champion, known_users = users with history before train_end, so users without
+        # history go through rank()'s fallback path and are flagged fallback_used=true.
+        self.known_users = known_users
         self._cache_key: tuple[str, ...] | None = None
         self._cache_val: np.ndarray | None = None
 
@@ -38,7 +42,7 @@ class PopModel:
         return cls({i: int(counts.get(i, 0)) for i in items})
 
     def knows_user(self, user_key: str) -> bool:
-        return True  # Pop scores every user the same way
+        return self.known_users is None or user_key in self.known_users
 
     def score_items(self, user_key: str, item_ids: Sequence[str]) -> np.ndarray:
         if item_ids is self._cache_key and self._cache_val is not None:

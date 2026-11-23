@@ -175,8 +175,8 @@ Day 4 的 T11：FastAPI 的 lifespan、`/health`、`/ready`、`/v1/recommend`（
 `monitor summary` 的统计范围包括 200 个计时请求、5 个预热请求和 3 个演示请求，共 208 条，其中 1 条是 422。fallback_rate = 0，原因见下面"待决定"。
 隐私扫描：`state/events.db` 和 `logs/serve.log` 对照 631,986 个真实 user_id，命中 0。
 
-### 待决定（规格不明确）
-API-02 写的是"未知用户 → pop_fallback，fallback_used=true"。当 champion 是 **Pop** 时，现在的实现对所有用户都返回 `fallback_used=false`，因为 Pop 模型给每个人打的分都一样，评估器里的 `fallback_user_count` 也是 0，两边是一致的。问题在于，这样监控里的 fallback 率永远是 0，容易被误读成"所有人都拿到了个性化推荐"。可选方案见当天汇报。
+### 已决定（规格不明确处，用户已批准，已写进 05 规格）
+champion 是 Pop 时，`train_end` 前没有任何评论的用户返回 `fallback_used=true`：Pop 模型只"认识" `seen_items` 里的用户，其余用户走同一个 `rank()` 的回退路径。推荐结果不变，离线评估口径不变（`fallback_user_count` 仍为 0）。上面 200 个请求的延迟测试是在改动前跑的，所以当时的 fallback_rate 显示 0；按新规则，那批请求里一半是未知用户，fallback_rate 会是约 0.5。
 
 ### 未完成 / 未验证
 - CI 没有在 GitHub 上跑过：还没有 remote，需要用户提供仓库名和可见性。

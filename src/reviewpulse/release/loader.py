@@ -177,8 +177,8 @@ def _smoke(release: LoadedRelease) -> None:
         raise BundleInvalid("SMOKE_FAILED", str(exc)) from exc
     if not a.item_ids or not b.item_ids:
         raise BundleInvalid("SMOKE_FAILED", "smoke recommendation returned no items")
-    if release.kind == "BPR" and (a.fallback or not b.fallback):
-        raise BundleInvalid("SMOKE_FAILED", "BPR fallback flag is wrong in smoke test")
+    if a.fallback or not b.fallback:
+        raise BundleInvalid("SMOKE_FAILED", "fallback flag is wrong in smoke test")
 
 
 def load_release(
@@ -203,6 +203,9 @@ def load_release(
     seen = _read_json(path / FILE_NAMES["seen_items"])
     if not isinstance(seen, dict):
         raise BundleInvalid("MAPPING_MISMATCH", "seen_items must be an object")
+    if isinstance(model, PopModel):
+        # a Pop champion "knows" users with history; others are flagged as fallback
+        model = PopModel(model.scores, known_users=set(seen))
     loaded = LoadedRelease(
         release_id=manifest["release_id"],
         path=path,

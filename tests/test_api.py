@@ -261,3 +261,15 @@ def test_internal_error_is_500_api_error(served, monkeypatch):
         resp = _rec(c, {"user_id": "synthetic-u1", "top_k": 3})
     body = _assert_api_error(resp, 500, "INTERNAL_ERROR")
     assert "secret detail" not in json.dumps(body)
+
+
+def test_api_t07_unknown_user_fallback_with_pop_champion(served):
+    with _client() as c:
+        known = _rec(c, {"user_id": "synthetic-u2", "top_k": 5}).json()
+        unknown = _rec(c, {"user_id": "never-seen-user", "top_k": 5}).json()
+        test_only = _rec(c, {"user_id": "synthetic-u4", "top_k": 5}).json()  # appears only in test
+    assert known["fallback_used"] is False
+    assert unknown["fallback_used"] is True
+    assert test_only["fallback_used"] is True
+    # same Pop ranking either way, minus seen items for the known user
+    assert short([i["item_id"] for i in unknown["items"]]) == ["a", "b", "c", "d"]

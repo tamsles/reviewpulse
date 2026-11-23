@@ -21,6 +21,7 @@
 - `user_id` 去空白后非空、≤ 128 字符；`top_k` 1..`max_top_k`（`runtime.yaml`，≤ 50）。
 - 先算 `user_key`，再查映射与已见集合；原始 user_id 不进日志。
 - 已知用户：模型打分；未知用户：`pop_fallback`，`fallback_used=true`。
+  - v1.2 补充（2026-11-23 用户批准）：champion 为 Pop 时，"已知用户" = `seen_items` 中有记录（`train_end` 前有任意评论）的用户；其余用户走同一个 `rank()` 的回退路径，`fallback_used=true`。推荐结果不变，只让监控的 fallback 率反映冷用户比例。离线评估口径不变（有效用户都有历史）。
 - 已见商品排除、不重复、排名从 1 连续、分数有限。分数是排序分，不是概率。
 - 没有可推荐商品：200，`items=[]`，`empty_reason="NO_CANDIDATES"`。
 - `fusion_used` 在 P0 恒为 `false`。

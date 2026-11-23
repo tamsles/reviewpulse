@@ -35,3 +35,27 @@ def make_source(tmp_path, source_dict):
         return parse_source_config(d)
 
     return _make
+
+
+SPLIT_YAML = FIXTURES / "split.yaml"
+
+
+@pytest.fixture
+def golden(tmp_path, make_source):
+    """Run the real prepare + split pipeline on the synthetic fixture."""
+    import pandas as pd
+
+    from reviewpulse.data.prepare import prepare
+    from reviewpulse.data.split import load_split_config, split
+
+    prepare(make_source(read_fixture_rows()), out_dir=tmp_path / "processed")
+    cfg = load_split_config(SPLIT_YAML)
+    manifest = split(cfg, tmp_path / "processed", tmp_path / "split")
+    windows = ("train", "valid", "test")
+    frames = {n: pd.read_parquet(tmp_path / "split" / f"{n}.parquet") for n in windows}
+    return {"frames": frames, "manifest": manifest, "protocol": cfg.evaluation, "dir": tmp_path}
+
+
+def short(item_ids):
+    """'synthetic-item-a' -> 'a' for readable assertions."""
+    return [i.rsplit("-", 1)[-1] for i in item_ids]

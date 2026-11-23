@@ -184,3 +184,37 @@ champion 是 Pop 时，`train_end` 前没有任何评论的用户返回 `fallbac
 
 ### 明天第一件事
 Day 5 的 T14：冻结配置，`evaluate-test` 对 Pop 和选定的 BPR 各跑**一次**。
+
+## Day 5（2026-11-23（一），比计划提前三天）
+
+| Task | 状态 | 证据 |
+|---|---|---|
+| T14 冻结 + test 评估 | 已完成；**每个 run 只跑了一次** | `reports/frozen_config.json`（`cdce0de`）；`reports/test_runs.log` 正好 2 条正式记录；重复运行返回 exit 1（OPS-T04） |
+| T15 experiment.md | 已完成 | `reports/experiment.md` |
+| T16 README + demo.sh | 已完成；在干净 clone 里验证过 | 从 GitHub clone 到临时目录，按 README 安装、pytest、demo.sh，全部 exit 0，合计约 3.6 分钟（OPS-T01） |
+| T17 情感分类 | **没做**（用户决定先不做；也是砍单顺序里第一个） | — |
+
+### test 结果（冻结后，每个模型只跑一次）
+| 模型 | run_id | NDCG@10 | Recall@10 | Coverage@10 | 有效用户 | 回退用户 |
+|---|---|---|---|---|---|---|
+| Pop | `0711a659…` | 0.007975 | 0.020264 | 0.000124 | 1,135 | 0 |
+| BPR | `9c62b80a…` | 0.002961 | 0.007930 | 0.020407 | 1,135 | 236 |
+
+剔除计数（test）：已见 15，冷商品 26,223，没有真值的 warm 用户 2,942。两个模型的 `ground_truth_sha256` 相同（`aa7b3a03…`）。
+
+### 其他改动
+- 所有 JSON 和日志改为固定写 LF。这是在两次正式评估之后才发现并修复的，两次评估用的是同一份代码，指标不受影响。日志里记录的 `evaluation_sha256` 是 CRLF 版本的哈希，Git 里 LF 版本的哈希已写进 experiment.md 第 8 节。
+- `git_info` 改为检查代码所在的仓库，而不是 `RP_HOME`。这样在临时目录里跑演示，也能正确记录 clean build。
+- 用旧版本号晋升时，CONFLICT 的提示会直接写出两个版本号。
+
+### 验证命令
+- `ruff check .`、`ruff format --check .` → exit 0
+- `pytest` → 232 passed，exit 0
+- `reviewpulse evaluate-test --confirm-final` ×2 → exit 0；第三次（重复跑 Pop）→ exit 1
+- `bash scripts/demo.sh`（本地、干净 clone 各一次）→ exit 0
+- GitHub Actions：`63b99c9` 的 run 45138863512 → success
+
+### 未完成 / 未验证
+- T17 情感分类没有做。
+- 没有录终端演示 GIF（可选项）。
+- `license_review_status` 仍为 `pending`。

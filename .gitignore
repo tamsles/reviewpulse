@@ -1,4 +1,4 @@
-data/
+/data/
 mlruns/
 mlflow.db
 state/

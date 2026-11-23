@@ -1,0 +1,22 @@
+# Synthetic fixture config for tests.
+source:
+  dataset: amazon_reviews_2023
+  category: synthetic
+  source_url: file://tests/fixtures/synthetic_reviews.jsonl
+  raw_path: tests/fixtures/synthetic_reviews.jsonl
+  raw_field_mapping:
+    user_id: user_id
+    item_id: parent_asin
+    timestamp: timestamp
+    text: text
+    rating: rating
+  timestamp_unit: ms   # verified on real records in T01 (13-digit epoch ms)
+  metadata_join_key: parent_asin
+  positive_rating_threshold: 4.0
+  weak_sentiment:
+    negative_if_rating_at_most: 2.0
+    positive_if_rating_at_least: 4.0
+    neutral_rating_policy: ignore_for_sentiment
+  license_review_status: synthetic
+output:
+  processed_dir: data/processed

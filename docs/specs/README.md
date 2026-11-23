@@ -43,6 +43,7 @@ v1.1 的完整设计**不删除**，作为"未来工作"保留在 `../reviewpuls
 4. `specs/01` ~ `specs/07`：各模块规格
 5. [`specs/acceptance.md`](specs/acceptance.md)：测试清单与任务映射
 6. [`PROMPTS.md`](PROMPTS.md)：给 Claude Code 的提示词合集（初始化、每天开工/收工、续接、卡住时）
+7. [`specs/backlog.md`](specs/backlog.md)：Day 5 之后剩下的待办（情感分类、演示 GIF、v1.1 文档、镜像瘦身、许可状态）
 
 ## 规格权威优先级（冲突时）
 

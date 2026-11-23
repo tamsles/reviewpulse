@@ -121,6 +121,19 @@ docker run -p 8000:8000 -e RP_USER_KEY="$RP_USER_KEY" \
 - **真实的线上反馈**：曝光和点击日志、A/B 测试，才能衡量 CTR 或转化率。
 - **规模**：多 worker 或多副本、事件写入队列化、模型服务和指针存储外置（替代 SQLite）。
 
+## 数据与引用
+
+数据来自 McAuley Lab 发布的 Amazon Reviews'23。这份数据**没有正式许可证**，维护者表示主要供研究用途（[说明](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1)）。本项目是非商业的作品，仓库里只有下载脚本和统计 manifest，不包含、也不再分发原始数据和评论原文。核对记录见 [`reports/data-spike.md`](reports/data-spike.md)。`configs/source.yaml` 里的 `license_review_status` 仍是 `pending`，因为核对是在配置冻结之后做的。
+
+```bibtex
+@article{hou2024bridging,
+  title={Bridging Language and Items for Retrieval and Recommendation},
+  author={Hou, Yupeng and Li, Jiacheng and He, Zhankui and Yan, An and Chen, Xiusi and McAuley, Julian},
+  journal={arXiv preprint arXiv:2403.03952},
+  year={2024}
+}
+```
+
 ## 目录
 
 ```text
@@ -142,4 +155,5 @@ docs/specs/        v1.2 specs, schemas, ADRs
 - **工夫した点④**：モデルは import 時ではなく起動時に読み込みます。Champion がなくてもサービスは起動し、`/ready` は 503 を返します。ログやイベントには生の user_id を残しません。
 - **結果**：このデータではユーザーの 92% がレビュー 1 件のみと非常に疎で、BPR（test NDCG@10 0.0030）は人気順 Pop（0.0080）に負けました。品質ゲートが BPR を却下し、Pop を本番モデルとして昇格させています。
 - **正直さ**：レビュー評価は購入ではなく、オフライン NDCG はオンライン CTR ではありません。test 評価は設定を凍結したうえで、各モデル 1 回だけ実施しました。
+- **データ**：Amazon Reviews'23 には正式なライセンスがなく、管理者は主に研究目的での提供としています。本プロジェクトは非営利で、生データやレビュー本文は再配布していません。
 - **今後**：コールドスタート向けの特徴量融合、ドリフト監視、デプロイ検証、二重鍵などは設計のみで、未実装です。

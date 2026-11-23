@@ -229,3 +229,8 @@ Day 5 的 T14：冻结配置，`evaluate-test` 对 Pop 和选定的 BPR 各跑**
 
 ### 待办（用户决定先不处理）
 - **v1.1 设计文档不在公开仓库里**：README 的"生产化还需要什么"目前链接的是 `docs/specs/CHANGES-v1.2.md` 和 ADR-0009。v1.1 原文在仓库外的 `../reviewpulse-specs-v1.1/`。以后要决定是否把它（或它的摘要）放进仓库，以及放之前是否需要脱敏。
+
+### 数据许可核对（2026-11-23）
+- 结论：Amazon Reviews'23 **没有正式许可证**；维护者在 Hugging Face 上表示主要供研究用途。本项目的用法（非商业、不再分发原始数据和评论原文、user_id 都经过 HMAC）和这个定位一致。
+- 记录：`reports/data-spike.md` 新增"许可核对"一节（来源链接和日期）；`reports/experiment.md` 第 2 节和第 8 节；README 新增"数据与引用"一节（BibTeX）和日语概要里的一行。
+- `configs/source.yaml` **没有改**，仍为 `pending`：它属于冻结的配置，改了就会改变冻结时记录的哈希，`tests/test_reports_integrity.py` 也会失败。用户选择在文档里说明。

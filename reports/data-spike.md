@@ -9,9 +9,16 @@
 | URL | https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/review_categories/All_Beauty.jsonl.gz |
 | 文件大小 | 94,441,517 字节（gzip） |
 | sha256 | `ee00e66835567c3f12fde6a482f8d7055c22cac2d0924f677263affdd8a0e349` |
-| 许可审核 | `pending`（数据集面向研究用途，本项目只提交脚本和 manifest，不提交数据） |
+| 许可审核 | 已核对（2026-11-23）：**没有正式许可证**，维护者表示主要供研究用途。配置字段仍为 `pending`，原因见下节 |
 
 复现：`python scripts/download_data.py --category All_Beauty`，然后 `python scripts/data_spike.py --raw data/raw/All_Beauty.jsonl.gz`
+
+## 许可核对（2026-11-23 补记）
+- **官方页面** <https://amazon-reviews-2023.github.io/>：没有写许可证或使用条款，只提供了论文引用。页脚的 "Copyright © 2024, McAuley Lab" 看起来是网站本身的版权声明。
+- **维护者说明**（Hugging Face，hyp1231，2024-03-08，<https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1>）：实验室 "not in a position to assign a license to this dataset or dictate the terms of its usage"，数据 "available primarily for research purposes"，使用者自行负责遵守伦理和法律规范。同一帖中（2024-12），维护者回复非商业毕业论文的使用 "I see no issues"。
+- 第三方页面声称的 CC BY-NC 4.0 / CC BY-SA 4.0 都**不是**官方说法，不作为依据。评论内容本身的权利可能还涉及 Amazon 的条款。
+- **本项目的用法**：非商业求职作品；不提交、不再分发原始数据和评论原文；user_id 在所有产物里都是 HMAC 后的值；只公开统计数字和离线指标。使用时引用 Hou et al. 2024（arXiv:2403.03952）。
+- **为什么 `configs/source.yaml` 仍写 `pending`**：核对是在 test 配置冻结（`reports/frozen_config.json`，2026-11-23T08:16:24Z）之后做的。`source.yaml` 属于冻结的 4 个配置之一，冻结时记录了它的哈希，`tests/test_reports_integrity.py` 会检查它没有变化。为了不破坏冻结，配置和 manifest 里的值保持 `pending`，以本节作为核对结论的记录。这个字段只写进 manifest，不影响 `normalized_sha256`、切分或任何指标。
 
 ## 字段核对（前 1000 行）
 - 字段：`rating`(float)、`title`、`text`、`images`、`asin`、`parent_asin`(str)、`user_id`(str)、`timestamp`(int)、`helpful_vote`、`verified_purchase`

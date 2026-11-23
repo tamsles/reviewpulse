@@ -115,7 +115,10 @@ def promote(
         raise PromotionError("quality.yaml thresholds are not all configured; refusing --execute")
     if decision.inputs.get("champion_version") != expected_version:
         # the gate compared against a different champion than the caller expects
-        reason = "gate ran against a different champion version"
+        reason = (
+            f"expected_version {expected_version} != champion version "
+            f"{decision.inputs.get('champion_version')} seen by the gate"
+        )
         _log_only("PROMOTE", release_id, expected_version, "CONFLICT", reason, actor)
         return PromotionResult(
             "PROMOTE", "CONFLICT", release_id, expected_version, current, reason, reason, gate_info

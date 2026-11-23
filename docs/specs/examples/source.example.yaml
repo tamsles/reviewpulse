@@ -1,0 +1,18 @@
+# Spec example only; category to be selected by T02 data spike.
+source:
+  dataset: amazon_reviews_2023
+  category: Video_Games
+  raw_field_mapping:
+    user_id: user_id
+    item_id: parent_asin
+    timestamp: timestamp
+    text: text
+    rating: rating
+  timestamp_unit: ms   # VERIFY with actual downloaded records in Phase 0
+  metadata_join_key: parent_asin
+  positive_rating_threshold: 4.0
+  weak_sentiment:
+    negative_if_rating_at_most: 2.0
+    positive_if_rating_at_least: 4.0
+    neutral_rating_policy: ignore_for_sentiment
+  license_review_status: pending

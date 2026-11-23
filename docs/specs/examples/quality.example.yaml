@@ -1,0 +1,15 @@
+# STRUCTURE EXAMPLE ONLY. Fill thresholds on Day 2 after seeing real validation numbers,
+# and write the reason next to each value. --execute refuses to run while any is null.
+quality:
+  recommendation:
+    primary_metric: rec/val/ndcg_at_10
+    direction: maximize
+    min_abs_ndcg: null        # e.g. a value clearly above random ranking
+    min_improvement: null     # non-Pop candidate must beat Pop by more than this
+    max_regression: null      # allowed drop vs current champion (same split only)
+    pop_exempt_from_beating_pop: true
+    reject_on_split_mismatch: true   # v1.2: no champion re-evaluation (ADR-0009 D5)
+    reject_dirty_build: true
+  promotion:
+    dry_run_by_default: true
+    cas_field: version_counter

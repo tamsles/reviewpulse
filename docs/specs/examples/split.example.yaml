@@ -1,0 +1,23 @@
+# Synthetic example only: do not reuse these dates blindly for full Amazon data.
+temporal_split:
+  timezone: UTC
+  train_end: "2023-01-01T00:00:00Z"
+  valid_end: "2023-04-01T00:00:00Z"
+  test_end: "2023-07-01T00:00:00Z"
+  chronological: true
+evaluation:
+  task: positive_review_interaction_ranking
+  topk: 10
+  ranking_mode: full
+  eligible_item_policy: any_review_before_cutoff      # ADR-0007
+  seen_item_policy: any_rating_before_cutoff          # low ratings are also excluded
+  observed_history_policy: train_only
+  ground_truth_policy: positive_minus_seen_intersect_eligible
+  report_excluded_relevance: true
+  recall_denominator: num_relevant
+  pop_score: distinct_positive_users_before_cutoff
+  feature_as_of: train_end
+  warm_start_main_report: true
+  tie_break: item_id_ascending
+  cold_start_report: separate
+  protocol_version: "1"

@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RecommendRequest v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "user_id",
+    "top_k"
+  ],
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "\\S"
+    },
+    "top_k": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 50
+    }
+  }
+}

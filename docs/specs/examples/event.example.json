@@ -1,0 +1,17 @@
+{
+  "schema_version": "1",
+  "event_id": "00000000-0000-4000-8000-000000000002",
+  "request_id": "00000000-0000-4000-8000-000000000001",
+  "time_utc": "2026-11-21T00:00:00Z",
+  "loaded_release_id": "rel-synthetic-demo",
+  "source": "synthetic_demo",
+  "user_key_hash": null,
+  "top_k": 3,
+  "candidate_count": 2,
+  "returned_item_count": 2,
+  "fallback_used": false,
+  "fusion_used": false,
+  "latency_ms": 10.2,
+  "http_status": 200,
+  "error_code": null
+}

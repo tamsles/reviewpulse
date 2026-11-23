@@ -1,0 +1,10 @@
+data/
+mlruns/
+mlflow.db
+state/
+releases/
+logs/
+.venv/
+__pycache__/
+*.parquet
+.env

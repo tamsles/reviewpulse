@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "ReviewPulse ChampionState v1 (desired pointer)",
+  "description": "单行 SQLite 表的导出形态。CAS 只比较 version_counter；初始为 0 且 release_id 为 null（ADR-0005）。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "release_id",
+    "version_counter",
+    "previous_release_id",
+    "promoted_at_utc",
+    "actor",
+    "gate_decision_sha256"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1"
+    },
+    "release_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "version_counter": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "previous_release_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "promoted_at_utc": {
+      "anyOf": [
+        {
+          "type": "string",
+          "format": "date-time"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "actor": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "gate_decision_sha256": {
+      "anyOf": [
+        {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{64}$"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "version_counter": {
+            "const": 0
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "release_id": {
+            "type": "null"
+          },
+          "previous_release_id": {
+            "type": "null"
+          },
+          "promoted_at_utc": {
+            "type": "null"
+          },
+          "actor": {
+            "type": "null"
+          },
+          "gate_decision_sha256": {
+            "type": "null"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "release_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "promoted_at_utc": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "actor": {
+            "type": "string",
+            "minLength": 1
+          },
+          "gate_decision_sha256": {
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{64}$"
+          }
+        }
+      }
+    }
+  ]
+}

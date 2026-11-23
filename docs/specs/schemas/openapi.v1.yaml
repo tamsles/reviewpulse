@@ -1,0 +1,122 @@
+openapi: 3.0.3
+info:
+  title: ReviewPulse Recommendation API
+  version: 1.2.0-design
+  description: 目标设计契约；尚未实现。排序分数不等于点击或购买概率。
+servers:
+  - url: http://127.0.0.1:8000
+paths:
+  /health:
+    get:
+      summary: 进程存活
+      responses:
+        '200':
+          description: 存活但不一定已加载模型
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status]
+                properties:
+                  status: {type: string, enum: [alive]}
+  /ready:
+    get:
+      summary: 线上实际已加载 release 就绪状态
+      responses:
+        '200':
+          description: 模型已加载
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Readiness'}
+        '503':
+          description: 未加载有效 release
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Readiness'}
+  /v1/recommend:
+    post:
+      operationId: recommend
+      summary: 个性化 Top-K 推荐
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: {$ref: '#/components/schemas/RecommendRequest'}
+      responses:
+        '200':
+          description: 成功，包含未知用户 fallback
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/RecommendResponse'}
+        '422':
+          description: 参数无效（所有参数错误统一 422，含 JSON 解析失败；不使用 400）
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApiError'}
+        '503':
+          description: 模型不可用
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApiError'}
+        '500':
+          description: 未预期错误
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/ApiError'}
+components:
+  schemas:
+    Readiness:
+      type: object
+      required: [ready, loaded_release_id, reason]
+      properties:
+        ready: {type: boolean}
+        loaded_release_id: {type: string, nullable: true}
+        reason:
+          type: string
+          nullable: true
+          enum: [NO_CHAMPION, BUNDLE_INVALID, USER_KEY_UNAVAILABLE, SMOKE_FAILED, LOADING, null]
+          description: ready=true 时为 null。服务只加载 desired Champion 指针所指 release，失败不改用其他 release。
+    RecommendRequest:
+      type: object
+      additionalProperties: false
+      required: [user_id, top_k]
+      properties:
+        user_id: {type: string, minLength: 1, maxLength: 128, pattern: '\S'}
+        top_k: {type: integer, minimum: 1, maximum: 50}
+    Recommendation:
+      type: object
+      required: [item_id, rank, score]
+      properties:
+        item_id: {type: string}
+        rank: {type: integer, minimum: 1}
+        score: {type: number, format: double}
+    RecommendResponse:
+      type: object
+      required: [request_id, loaded_release_id, items, fallback_used, fusion_used, candidate_count, empty_reason]
+      properties:
+        request_id: {type: string, format: uuid}
+        loaded_release_id: {type: string}
+        items:
+          type: array
+          items: {$ref: '#/components/schemas/Recommendation'}
+        fallback_used: {type: boolean}
+        fusion_used: {type: boolean}
+        candidate_count: {type: integer, minimum: 0}
+        empty_reason:
+          type: string
+          nullable: true
+          enum: [NO_CANDIDATES, null]
+          description: items 为空时说明原因；非空时为 null
+    ApiError:
+      type: object
+      required: [request_id, error]
+      properties:
+        request_id: {type: string, format: uuid}
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum: [INVALID_ARGUMENT, MODEL_NOT_READY, MODEL_UNAVAILABLE, INTERNAL_ERROR]
+            message: {type: string}

@@ -9,7 +9,7 @@ releases/<release_id>/
   item_mapping.json
   seen_items.json        # 键 = user_key，值 = 商品列表（只到 C）
   eligible_items.json
-  pop_fallback.json      # Pop 排序后的商品列表
+  pop_fallback.json      # Pop 排序后的 [item_id, score] 列表（见 REL-01 补充）
   evaluation.json        # 验证集评估 manifest
 ```
 - `user_key = HMAC-SHA256(RP_USER_KEY, user_id)` 的十六进制。密钥来自环境变量，不进 Git、不进 manifest。
@@ -35,6 +35,11 @@ releases/<release_id>/
 - `kind = Pop` 免检第 5 条（它就是基线）。所以 BPR 输给 Pop 时，可以晋升 Pop 保证服务可用，并在报告中写明 BPR 未通过。
 - `min_abs_ndcg`、`min_improvement`、`max_regression` 在 Day 2 看到真实数字后写进 `quality.yaml`，并记录理由；未配置时 `--execute` 拒绝执行。
 - 门禁结果写成 `gate_decision.json`（含输入哈希、每条检查结果），其 sha256 写进晋升记录。
+
+### v1.2 补充（2026-11-23 用户批准，Day 3 实现前）
+- **REL-01 `pop_fallback.json` 格式**：按 Pop 顺序（分数降序、`item_id` 升序）排列的 `[item_id, score]` 列表，score 为整数（C 之前正向评价的去重用户数）。必须存分数，因为 `rank()` 按分数排序，API 也要返回真实分数。商品集合必须与 `eligible_items.json` 相同，加载时校验。
+- **GATE-01 第 5 条的 Pop 基线来源**：门禁只接受 `release_id`，所以 Pop 基线 = `releases/` 中 `kind=Pop`、且 `split_sha256` / `protocol_sha256` / `ground_truth_sha256` 三个哈希都与候选一致、并能完整加载的 release，用它的 `evaluation.json`（仍满足 C-05：只读登记的评估文件）。找不到 → `PROTOCOL_MISMATCH`，detail 写明"没有同口径的 Pop 基线"。不把 Pop 评估塞进候选 release（manifest schema 的 `files` 不允许额外条目）。
+- **`gate_decision.json` 的位置**：写到 `state/gate/<release_id>.json`，不写进 release 目录（release 目录在打包后保持不可变，所有文件都受 manifest 哈希约束）。
 
 ## PROM-01 Champion 存储（`state/registry.db`，SQLite）
 ```sql

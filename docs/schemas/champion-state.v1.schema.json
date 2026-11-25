@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "ReviewPulse ChampionState v1 (desired pointer)",
-  "description": "单行 SQLite 表的导出形态。CAS 只比较 version_counter；初始为 0 且 release_id 为 null（ADR-0005）。",
+  "description": "Export shape of the single-row SQLite champion table. CAS compares version_counter only; the initial state has version_counter 0 and release_id null.",
   "type": "object",
   "additionalProperties": false,
   "required": [

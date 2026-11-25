@@ -1,29 +1,29 @@
-# T01 数据 Spike（2026-11-23）
+# Data Spike (2026-11-23)
 
-全部数字来自 `scripts/data_spike.py` 对真实文件的输出，统计口径是**原始记录**（还没去重）。
+All numbers are output of `scripts/data_spike.py` on the real file, counted over **raw records** (before deduplication).
 
-## 数据源
-| 项目 | 值 |
+## Source
+| Item | Value |
 |---|---|
-| 数据集 | Amazon Reviews'23，品类 `All_Beauty` |
+| Dataset | Amazon Reviews'23, category `All_Beauty` |
 | URL | https://mcauleylab.ucsd.edu/public_datasets/data/amazon_2023/raw/review_categories/All_Beauty.jsonl.gz |
-| 文件大小 | 94,441,517 字节（gzip） |
+| File size | 94,441,517 bytes (gzip) |
 | sha256 | `ee00e66835567c3f12fde6a482f8d7055c22cac2d0924f677263affdd8a0e349` |
-| 许可审核 | 已核对（2026-11-23）：**没有正式许可证**，维护者表示主要供研究用途。配置字段仍为 `pending`，原因见下节 |
+| License review | Done (2026-11-23): **no formal license**; the maintainers say the data is mainly for research. The config field still reads `pending`; see the next section. |
 
-复现：`python scripts/download_data.py --category All_Beauty`，然后 `python scripts/data_spike.py --raw data/raw/All_Beauty.jsonl.gz`
+Reproduce: `python scripts/download_data.py --category All_Beauty`, then `python scripts/data_spike.py --raw data/raw/All_Beauty.jsonl.gz`.
 
-## 许可核对（2026-11-23 补记）
-- **官方页面** <https://amazon-reviews-2023.github.io/>：没有写许可证或使用条款，只提供了论文引用。页脚的 "Copyright © 2024, McAuley Lab" 看起来是网站本身的版权声明。
-- **维护者说明**（Hugging Face，hyp1231，2024-03-08，<https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1>）：实验室 "not in a position to assign a license to this dataset or dictate the terms of its usage"，数据 "available primarily for research purposes"，使用者自行负责遵守伦理和法律规范。同一帖中（2024-12），维护者回复非商业毕业论文的使用 "I see no issues"。
-- 第三方页面声称的 CC BY-NC 4.0 / CC BY-SA 4.0 都**不是**官方说法，不作为依据。评论内容本身的权利可能还涉及 Amazon 的条款。
-- **本项目的用法**：非商业求职作品；不提交、不再分发原始数据和评论原文；user_id 在所有产物里都是 HMAC 后的值；只公开统计数字和离线指标。使用时引用 Hou et al. 2024（arXiv:2403.03952）。
-- **为什么 `configs/source.yaml` 仍写 `pending`**：核对是在 test 配置冻结（`reports/frozen_config.json`，2026-11-23T08:16:24Z）之后做的。`source.yaml` 属于冻结的 4 个配置之一，冻结时记录了它的哈希，`tests/test_reports_integrity.py` 会检查它没有变化。为了不破坏冻结，配置和 manifest 里的值保持 `pending`，以本节作为核对结论的记录。这个字段只写进 manifest，不影响 `normalized_sha256`、切分或任何指标。
+## License review (added 2026-11-23)
+- **Official page** <https://amazon-reviews-2023.github.io/>: no license or terms of use, only a paper citation. The footer "Copyright © 2024, McAuley Lab" appears to cover the website itself.
+- **Maintainer statement** (Hugging Face discussion, 2024-03-08, <https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1>): the lab says it cannot assign a license or dictate terms of use; the data is available primarily for research, and users are responsible for ethical and legal compliance. In the same thread (2024-12) the maintainer saw no issue with use in a non-commercial thesis.
+- Third-party pages claiming CC BY-NC 4.0 or CC BY-SA 4.0 are **not** official and are not relied on. Rights in the review text itself may also involve Amazon's terms.
+- **How this project uses it**: a non-commercial portfolio project. Raw data and review text are neither committed nor redistributed. `user_id` is HMAC-keyed in every artifact. Only aggregate statistics and offline metrics are published. The dataset is cited as Hou et al. 2024 (arXiv:2403.03952).
+- **Why `configs/source.yaml` still says `pending`**: the review happened after the test configuration was frozen (`reports/frozen_config.json`, 2026-11-23T08:16:24Z). `source.yaml` is one of the four frozen configs; its hash was recorded at freeze time and `tests/test_reports_integrity.py` checks it has not changed. To keep the freeze intact, the value stays `pending` in the config and manifest, and this section is the record of the review. The field only goes into the manifest and affects neither `normalized_sha256`, the split nor any metric.
 
-## 字段核对（前 1000 行）
-- 字段：`rating`(float)、`title`、`text`、`images`、`asin`、`parent_asin`(str)、`user_id`(str)、`timestamp`(int)、`helpful_vote`、`verified_purchase`
-- `user_id`：全部 28 个字符（是匿名 ID）。`parent_asin`：全部 10 个字符，其中 93.1% 和 `asin` 相同，按规格用 `parent_asin` 作为 `item_id`
-- **timestamp 单位是 ms**：数值全部 13 位。换算示例：
+## Field check (first 1,000 rows)
+- Fields: `rating` (float), `title`, `text`, `images`, `asin`, `parent_asin` (str), `user_id` (str), `timestamp` (int), `helpful_vote`, `verified_purchase`.
+- `user_id`: always 28 characters (an anonymized ID). `parent_asin`: always 10 characters, equal to `asin` in 93.1% of rows; `parent_asin` is used as `item_id`.
+- **timestamp unit is milliseconds**: all values have 13 digits. Examples:
 
 | timestamp | UTC |
 |---|---|
@@ -33,39 +33,39 @@
 | 1643393630220 | 2022-01-28T18:13:50.220Z |
 | 1609322563534 | 2020-12-30T10:02:43.534Z |
 
-## 规模
-| 指标 | 值 |
+## Size
+| Metric | Value |
 |---|---|
-| 评论数 | 701,528 |
-| 用户数 | 631,986 |
-| 商品数 | 112,565 |
-| user/item/rating/timestamp 空值 | 0 / 0 / 0 / 0 |
-| 精确重复（user, item, timestamp, rating） | 7,276 |
-| 时间范围 | 2000-11-01 .. 2023-09-09 |
-| 正向（≥4）占比 | 71.29% |
-| 每用户评论数 | 平均 1.11；≥2 条的用户占 7.66%；最多 165 条 |
+| Reviews | 701,528 |
+| Users | 631,986 |
+| Items | 112,565 |
+| Nulls in user / item / rating / timestamp | 0 / 0 / 0 / 0 |
+| Exact duplicates (user, item, timestamp, rating) | 7,276 |
+| Time range | 2000-11-01 .. 2023-09-09 |
+| Positive (>= 4) share | 71.29% |
+| Reviews per user | mean 1.11; 7.66% of users have >= 2; max 165 |
 
-评分分布：1 分 102,080；2 分 43,034；3 分 56,307；4 分 79,381；5 分 420,726。
+Rating distribution: 1 star 102,080; 2 stars 43,034; 3 stars 56,307; 4 stars 79,381; 5 stars 420,726.
 
-按年评论数：2015 年 36,239 条，2016 年 62,747，2017 年 68,035，2018 年 72,707，2019 年 99,120，2020 年 126,753，2021 年 124,897，2022 年 61,581，2023 年 14,405。2021 年中以后每月的评论数一路下降，2023-04 以后每月不到 2,000 条。完整的按月表在脚本输出里。
+Reviews per year: 2015: 36,239; 2016: 62,747; 2017: 68,035; 2018: 72,707; 2019: 99,120; 2020: 126,753; 2021: 124,897; 2022: 61,581; 2023: 14,405. From mid-2021 the monthly count falls steadily, and from 2023-04 there are fewer than 2,000 reviews a month. The full monthly table is in the script output.
 
-## 切分边界
-时间分位数：80% 在 2021-05-24，90% 在 2022-01-26。下表的"有效用户"按 02 的口径计算：train 中有任意评论，且在窗口内有 `正向 − seen ∩ eligible` 非空的商品。seen 只算到 `train_end`。
+## Split boundaries
+Time quantiles: 80% at 2021-05-24, 90% at 2022-01-26. "Valid users" below follow the evaluation protocol: any review in train, and a non-empty `positive - seen ∩ eligible` in the window. seen stops at `train_end`.
 
-| train_end | valid_end | test_end | train | valid | test | valid% | test% | valid 有效用户 | test 有效用户 | eligible 商品 |
+| train_end | valid_end | test_end | train | valid | test | valid% | test% | valid users (valid) | valid users (test) | eligible items |
 |---|---|---|---|---|---|---|---|---|---|---|
 | **2021-05-01** | **2022-01-01** | **2023-10-01** | 552,552 | 72,990 | 75,986 | 10.40 | 10.83 | **2,122** | **1,135** | 88,939 |
 | 2021-03-01 | 2021-11-01 | 2023-10-01 | 525,591 | 86,424 | 89,513 | 12.32 | 12.76 | 2,193 | 1,206 | 84,433 |
 | 2020-11-01 | 2021-08-01 | 2023-10-01 | 478,784 | 107,469 | 115,275 | 15.32 | 16.43 | 2,351 | 1,256 | 76,310 |
 | 2021-01-01 | 2021-07-01 | 2022-01-01 | 500,645 | 74,599 | 50,298 | 10.63 | 7.17 | 2,002 | 775 | 80,187 |
 
-**选定（2026-11-23 用户确认）**：`train_end=2021-05-01`、`valid_end=2022-01-01`、`test_end=2023-10-01`。
-- valid 和 test 各占约 10%，符合 SPLIT-01。
-- `test_end` 放在最后一条记录（2023-09-09）之后，所以不会丢数据。
-- 放宽窗口几乎不增加有效用户（15% 的方案也只有 2,351 人），反而让 train 变小，所以不放宽。
+**Chosen (2026-11-23)**: `train_end=2021-05-01`, `valid_end=2022-01-01`, `test_end=2023-10-01`.
+- Validation and test each hold about 10% of interactions.
+- `test_end` lies after the last record (2023-09-09), so no data is dropped.
+- Wider windows barely add valid users (even the 15% option has only 2,351) and shrink train, so they were not used.
 
-## 风险与局限（会写进 experiment.md）
-1. **有效用户偏少**：valid 2,122 人，刚好在"几千"的下限；test 只有 1,135 人，指标的抽样噪声较大，小差距不能下结论。
-2. **用户极度稀疏**：92% 的用户只有 1 条评论，协同过滤（BPR）能利用的信号很少，**很可能不如 Pop**。按 C-12 会照实报告。
-3. 时间上的分布不均：test 窗口有 21 个月，但评论集中在前面的几个月。
-4. 评分评论 ≠ 购买；未评论 ≠ 不喜欢（C-12）。
+## Risks and limitations (carried into the experiment report)
+1. **Few valid users**: 2,122 on validation, at the low end of "a few thousand"; only 1,135 on test, so metric noise is large and small differences are not conclusive.
+2. **Extreme user sparsity**: 92% of users have one review. Collaborative filtering (BPR) has little signal and is **likely to lose to Pop**. That will be reported as is.
+3. Uneven time distribution: the test window spans 21 months, but most reviews fall in the first few.
+4. A rated review is not a purchase; no review is not dislike.

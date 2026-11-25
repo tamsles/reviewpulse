@@ -15,7 +15,7 @@ from reviewpulse.release.package import package
 from reviewpulse.serving.app import create_app
 
 SCHEMA = json.loads(
-    (Path(__file__).parents[1] / "docs/specs/schemas/monitoring-event.v1.schema.json").read_text(
+    (Path(__file__).parents[1] / "docs/schemas/monitoring-event.v1.schema.json").read_text(
         encoding="utf-8"
     )
 )

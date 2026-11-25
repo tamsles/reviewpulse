@@ -13,9 +13,9 @@ from reviewpulse import cli
 
 FAKE_KEY = "test-only-secret-0123456789abcdef"
 SCHEMA = json.loads(
-    (
-        Path(__file__).parents[1] / "docs/specs/schemas/evaluation-manifest.v1.2.schema.json"
-    ).read_text(encoding="utf-8")
+    (Path(__file__).parents[1] / "docs/schemas/evaluation-manifest.v1.2.schema.json").read_text(
+        encoding="utf-8"
+    )
 )
 
 

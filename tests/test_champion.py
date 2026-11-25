@@ -15,7 +15,7 @@ from reviewpulse.release.package import package
 from reviewpulse.train import train
 
 SCHEMA = json.loads(
-    (Path(__file__).parents[1] / "docs/specs/schemas/champion-state.v1.schema.json").read_text(
+    (Path(__file__).parents[1] / "docs/schemas/champion-state.v1.schema.json").read_text(
         encoding="utf-8"
     )
 )

@@ -252,7 +252,7 @@ def test_packaged_schema_copy_matches_spec():
 
     from reviewpulse.release.manifest import SCHEMA_DIR
 
-    spec = Path(__file__).parents[1] / "docs" / "specs" / "schemas"
+    spec = Path(__file__).parents[1] / "docs" / "schemas"
     for f in SCHEMA_DIR.glob("*.json"):
         assert f.read_bytes() == (spec / f.name).read_bytes(), f.name
 

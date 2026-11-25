@@ -1,4 +1,4 @@
-"""T04: rank() + evaluator. Golden numbers come from specs/02-evaluation.md EVAL-04."""
+"""T04: rank() + evaluator. Golden numbers come from docs/design.md (golden case)."""
 
 import copy
 import json
@@ -15,9 +15,9 @@ from reviewpulse.evaluation.protocol import ProtocolError, protocol_sha256
 from reviewpulse.ranking import ItemSpace, RankingError, rank
 
 SCHEMA = json.loads(
-    (
-        Path(__file__).parents[1] / "docs/specs/schemas/evaluation-manifest.v1.2.schema.json"
-    ).read_text(encoding="utf-8")
+    (Path(__file__).parents[1] / "docs/schemas/evaluation-manifest.v1.2.schema.json").read_text(
+        encoding="utf-8"
+    )
 )
 ITEM = "synthetic-item-"
 

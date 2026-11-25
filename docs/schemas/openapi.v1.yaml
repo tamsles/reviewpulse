@@ -1,17 +1,17 @@
 openapi: 3.0.3
 info:
   title: ReviewPulse Recommendation API
-  version: 1.2.0-design
-  description: 目标设计契约；尚未实现。排序分数不等于点击或购买概率。
+  version: 1.2.0
+  description: API contract. Ranking scores are not click or purchase probabilities.
 servers:
   - url: http://127.0.0.1:8000
 paths:
   /health:
     get:
-      summary: 进程存活
+      summary: Liveness
       responses:
         '200':
-          description: 存活但不一定已加载模型
+          description: Process is alive (a model may not be loaded yet)
           content:
             application/json:
               schema:
@@ -21,22 +21,22 @@ paths:
                   status: {type: string, enum: [alive]}
   /ready:
     get:
-      summary: 线上实际已加载 release 就绪状态
+      summary: Readiness of the release actually loaded by this process
       responses:
         '200':
-          description: 模型已加载
+          description: Model loaded
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Readiness'}
         '503':
-          description: 未加载有效 release
+          description: No valid release loaded
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Readiness'}
   /v1/recommend:
     post:
       operationId: recommend
-      summary: 个性化 Top-K 推荐
+      summary: Personalized top-K recommendations
       requestBody:
         required: true
         content:
@@ -44,22 +44,22 @@ paths:
             schema: {$ref: '#/components/schemas/RecommendRequest'}
       responses:
         '200':
-          description: 成功，包含未知用户 fallback
+          description: Success (unknown users get the popularity fallback)
           content:
             application/json:
               schema: {$ref: '#/components/schemas/RecommendResponse'}
         '422':
-          description: 参数无效（所有参数错误统一 422，含 JSON 解析失败；不使用 400）
+          description: Invalid argument (all argument errors, including malformed JSON, return 422; 400 is not used)
           content:
             application/json:
               schema: {$ref: '#/components/schemas/ApiError'}
         '503':
-          description: 模型不可用
+          description: Model not ready
           content:
             application/json:
               schema: {$ref: '#/components/schemas/ApiError'}
         '500':
-          description: 未预期错误
+          description: Unexpected error
           content:
             application/json:
               schema: {$ref: '#/components/schemas/ApiError'}
@@ -75,7 +75,7 @@ components:
           type: string
           nullable: true
           enum: [NO_CHAMPION, BUNDLE_INVALID, USER_KEY_UNAVAILABLE, SMOKE_FAILED, LOADING, null]
-          description: ready=true 时为 null。服务只加载 desired Champion 指针所指 release，失败不改用其他 release。
+          description: Null when ready=true. The service only loads the release the champion pointer refers to and never falls back to another release on failure.
     RecommendRequest:
       type: object
       additionalProperties: false
@@ -106,7 +106,7 @@ components:
           type: string
           nullable: true
           enum: [NO_CANDIDATES, null]
-          description: items 为空时说明原因；非空时为 null
+          description: Reason when items is empty; null otherwise
     ApiError:
       type: object
       required: [request_id, error]

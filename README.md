@@ -103,28 +103,6 @@ The image contains only code, configs and dependencies. Releases and state are m
 - API server-side latency p95 is 2.4 ms (local machine, one worker, top_k=10).
 - These are **offline** metrics. A rated review is not a purchase, and offline NDCG is not online CTR.
 
-## Design decisions
-
-- **Why a global time split**: a random split lets the model see the future. Training, seen sets and Pop scores use only data before `train_end`, and for test evaluation the seen set also stops at `train_end`. A counter-example test injects a future review into the raw data and checks that the train file stays byte-identical.
-- **Why seen items include low ratings, and why exclusions are reported**: an item a user rated 1 star should not be recommended again either. Ground-truth items that were excluded (already seen, or cold) are reported next to the metrics, so a score cannot look good just because data was filtered.
-- **Why promotion uses a version-counter CAS instead of comparing release IDs**: after A -> B -> A the release ID is A again, so comparing IDs cannot see that something changed in between (the ABA problem). `version_counter` only grows, so a request holding an old version always gets `CONFLICT`. The implementation is a single `UPDATE … WHERE version_counter = ?`.
-- **Why Pop can be promoted**: Pop is the baseline and is exempt from the "must beat Pop" check. When BPR cannot beat Pop, promoting Pop keeps the service available and explainable instead of shipping a worse model.
-- **Why the gate takes no scores as input**: `gate(release_id)` has one argument. Every number is read from the `evaluation.json` registered in the release bundle. Comparing against the Pop baseline requires the split, protocol and ground-truth hashes to match.
-- **Why there is no online CTR**: there are no impressions or clicks, and offline NDCG must not pose as online performance. `monitor summary` always shows online quality as `UNAVAILABLE`.
-- **Why the model is not loaded at import**: the service loads the champion in its lifespan hook. With no champion, or when loading fails, the service still starts, `/ready` returns 503 with a reason, and it **never silently switches to another release**. `/ready` reports the release actually loaded, not the latest pointer on disk.
-- **Privacy**: release bundles, the event store and logs contain only `HMAC-SHA256(RP_USER_KEY, user_id)`, and the key is read only from the environment. Tests scan these artifacts to confirm that no raw `user_id` is present.
-
-## What production would still need
-
-This is a single-machine project. The following were left out on purpose (see [`docs/design.md`](docs/design.md#10-scope-deliberately-left-out)):
-
-- **Deployment verification**: with multiple instances, track desired vs. actual state and provide `deploy verify` instead of checking `/ready` by hand.
-- **Separate keys**: release bundles and telemetry should use different keys, with key rotation.
-- **Drift monitoring and feedback retraining**: drift detection and a retraining state machine. Retraining changes the split, so the champion would need to be re-evaluated on the new split.
-- **Cold start and content features**: excluded cold-item ground truth far outnumbers the ground truth that is kept, so text or item features are needed for fusion re-ranking.
-- **Real online feedback**: impression and click logs and A/B tests to measure CTR or conversion.
-- **Scale**: multiple workers or replicas, queued event writes, and an external model store and pointer store instead of SQLite.
-
 ## Data and citation
 
 The data is Amazon Reviews'23, published by McAuley Lab. The dataset **has no formal license**; the maintainers say it is provided mainly for research ([discussion](https://huggingface.co/datasets/McAuley-Lab/Amazon-Reviews-2023/discussions/1)). This is a non-commercial portfolio project. The repository contains only a download script and statistical manifests, and it neither includes nor redistributes raw data or review text. The review is recorded in [`reports/data-spike.md`](reports/data-spike.md). `license_review_status` in `configs/source.yaml` still reads `pending` because the review happened after the config was frozen.
